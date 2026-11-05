@@ -24,3 +24,6 @@ backend/*.egg-info/
 # local only
 CLAUDE.md
 _reference/
+
+# firebase deploy cache
+.firebase/

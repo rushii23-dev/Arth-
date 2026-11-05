@@ -15,6 +15,21 @@ npm test
 
 `ARTH_STORE=memory` keeps data in memory (lost on restart); `firestore` uses Google Cloud.
 
+## Deploy (Google Cloud)
+
+Project `arth-solo-2026` (owned by the solo account): Firestore in `asia-south1` is created and locked
+(`firestore.rules` denies all client access; only this API reads and writes, with admin access).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy.ps1
+```
+
+This enables the APIs, creates the `arth-api` service account (Firestore access only), stores
+`GEMINI_API_KEY` and `ARTH_DATA_GOV_IN_API_KEY` from `backend/.env` in Secret Manager, builds and deploys the
+API to Cloud Run in Mumbai, then builds the web app and publishes it to Firebase Hosting. Hosting sends
+`/api/**` to Cloud Run (`firebase.json`), so the browser calls the API on its own domain. Cloud Run needs
+billing or credits on the project.
+
 ## Layout
 
 | Path | What |
