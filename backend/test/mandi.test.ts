@@ -139,6 +139,9 @@ describe('mandi routes and brief alerts', () => {
     verifyToken: async () => 'u1',
     forecast: async () => calm,
     mandi: async (c) => (c === 'onion' ? records : []),
+    llm: async () => {
+      throw new Error('unused')
+    },
     clock: () => new Date('2026-11-05T04:30:00Z'),
   })
   const h = { Authorization: 'Bearer x', 'Content-Type': 'application/json' }

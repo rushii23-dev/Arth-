@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase-admin/app'
 import { createApp } from './app.js'
 import { firebaseVerifier } from './auth.js'
 import { loadConfig } from './config.js'
+import { gemini } from './services/llm.js'
 import { cachedMandi, dataGovIn } from './services/mandi.js'
 import { cached, openMeteo } from './services/weather.js'
 import { firestoreStore } from './store/firestore.js'
@@ -19,6 +20,7 @@ const app = createApp({
   verifyToken: firebaseVerifier(),
   forecast: cached(openMeteo()),
   mandi: cachedMandi(dataGovIn(config.dataGovInApiKey)),
+  llm: gemini(config.geminiApiKey),
 })
 
 serve({ fetch: app.fetch, port: config.port, hostname: '0.0.0.0' }, (info) => {

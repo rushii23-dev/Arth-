@@ -8,6 +8,8 @@ export interface Config {
   store: StoreKind
   geminiApiKey: string
   model: string
+  /** Model for voice: hosted Gemma 4 does not list audio input. */
+  audioModel: string
   dataGovInApiKey: string
   /** Rough truck cost used in sell advice, ₹ per quintal per km. */
   transportRsPerQuintalKm: number
@@ -23,7 +25,8 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     corsOrigins: parseList(e.ARTH_CORS_ORIGINS ?? 'http://localhost:5173'),
     store,
     geminiApiKey: e.GEMINI_API_KEY ?? '',
-    model: e.ARTH_MODEL ?? '',
+    model: e.ARTH_MODEL || 'gemma-4-26b-a4b-it',
+    audioModel: e.ARTH_AUDIO_MODEL || 'gemini-2.5-flash',
     dataGovInApiKey: e.ARTH_DATA_GOV_IN_API_KEY ?? '',
     transportRsPerQuintalKm: Number(e.ARTH_TRANSPORT_RS_PER_QUINTAL_KM ?? 2),
   }
