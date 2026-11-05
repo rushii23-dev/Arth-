@@ -30,8 +30,9 @@ from `src/lib/session.ts`. Sign-out also clears the chosen account on the phone.
 ## 1 · Prerequisites
 
 - **Android Studio** (it brings the Android SDK and a JDK, "JBR", under
-  `<Android Studio>/jbr`). Gradle needs JDK 21 or newer; Android Studio's JBR is the
-  simplest choice.
+  `<Android Studio>/jbr`). Capacitor 8 compiles for Java 21, so Gradle must run on
+  **JDK 21–25**. Android Studio's JBR (25) is the simplest choice. The wrapper is set
+  to Gradle 9.1.0 (Capacitor's template ships 8.14.3, which cannot run on JDK 25).
 - From Android Studio → *SDK Manager*: **Android SDK Platform 36** and Build-Tools
   (Gradle downloads missing platforms itself when the licences are accepted).
 - **Node.js 20+** and the frontend dependencies (`cd frontend && npm ci`).
@@ -179,4 +180,6 @@ Chrome on the PC to get DevTools (console, network) for the running app.
 | "No credentials available" | No Google account on the phone, or the emulator image has no Play services. |
 | Every API call fails | `VITE_API_BASE_URL` is wrong or not reachable from the phone (try it in the phone's Chrome), firewall blocks port 8000, or `https://localhost` is missing from `ARTH_CORS_ORIGINS`. |
 | Changes do not show up | Run `npm run build:android` again, then rebuild/reinstall. |
+| `Unsupported class file major version 69` | Gradle older than 9.1 running on JDK 25. Keep the wrapper at 9.1.0+ (`android/gradle/wrapper/gradle-wrapper.properties`) or point `JAVA_HOME` at a JDK 21. |
+| Gradle download "Connect timed out" while `curl` works | Java is trying IPv6. Run with `$env:GRADLE_OPTS="-Djava.net.preferIPv4Stack=true"` and `./gradlew assembleDebug "-Dorg.gradle.jvmargs=-Xmx1536m -Djava.net.preferIPv4Stack=true"`. |
 | `SDK location not found` | Set `ANDROID_HOME` or `sdk.dir` in `android/local.properties`. |
