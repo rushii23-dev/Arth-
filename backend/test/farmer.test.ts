@@ -28,7 +28,7 @@ const profile = {
 
 let app: ReturnType<typeof createApp>
 beforeEach(() => {
-  app = createApp({ config, store: memoryStore(), verifyToken, forecast: async () => { throw new Error("unused") } })
+  app = createApp({ config, store: memoryStore(), verifyToken, forecast: async () => { throw new Error("unused") }, mandi: async () => [] })
 })
 
 const call = (method: string, path: string, uid: string | null, body?: unknown) =>

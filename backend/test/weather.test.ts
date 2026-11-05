@@ -45,7 +45,7 @@ const profile = {
 
 function setup(daily = week()) {
   const forecast = vi.fn(async () => forecastOf(daily))
-  const app = createApp({ config, store: memoryStore(), verifyToken, forecast, clock })
+  const app = createApp({ config, store: memoryStore(), verifyToken, forecast, mandi: async () => [], clock })
   const get = (path: string, uid = 'u1') => app.request(path, { headers: { Authorization: `Bearer token-${uid}` } })
   const put = (body: unknown, uid = 'u1') =>
     app.request('/farmer/me', {

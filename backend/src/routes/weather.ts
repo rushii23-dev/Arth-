@@ -1,12 +1,14 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { AuthVars } from '../auth.js'
-import { ApiError, notFound } from '../errors.js'
+import { notFound } from '../errors.js'
 import type { Clock } from '../lib/time.js'
 import { Lang, round2 } from '../schemas.js'
 import { buildBrief } from '../services/brief.js'
+import type { MandiSource } from '../services/mandi.js'
 import { advisories, type ForecastSource } from '../services/weather.js'
 import type { Store } from '../store/types.js'
+import { parseQuery } from './query.js'
 
 const WeatherQuery = z.object({
   lat: z.coerce.number().min(-90).max(90).transform(round2),
@@ -16,19 +18,10 @@ const WeatherQuery = z.object({
 
 const BriefQuery = z.object({ lang: Lang.optional() })
 
-function parseQuery<T extends z.ZodType>(schema: T, query: Record<string, string>): z.infer<T> {
-  const parsed = schema.safeParse(query)
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0]
-    throw new ApiError(400, 'invalid_query', `${issue?.path.join('.') || 'query'}: ${issue?.message ?? 'invalid'}`)
-  }
-  return parsed.data
-}
-
 /** Within ~5 km of the saved farm, the farm's own place name is the right label. */
 const NEAR_DEG = 0.05
 
-export function weatherRoutes(deps: { store: Store; forecast: ForecastSource; clock: Clock }) {
+export function weatherRoutes(deps: { store: Store; forecast: ForecastSource; mandi: MandiSource; clock: Clock }) {
   const r = new Hono<{ Variables: AuthVars }>()
 
   r.get('/weather', async (c) => {

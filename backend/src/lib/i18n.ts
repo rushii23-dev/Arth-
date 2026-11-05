@@ -23,6 +23,17 @@ const en: Messages = {
   'act.sow.title': '{season} sowing is open',
   'act.sow.detail': 'Day {n} of the {season} season. See which crops suit your farm now.',
 
+  'act.priceUp.title': '{crop} up {pct}% at {market}',
+  'act.priceUp.detail': '₹{price} a quintal now. See which market pays most after transport.',
+
+  'sell.best': '{market} pays the most after transport: ₹{net} for {qty} quintals.',
+  'sell.risingWait':
+    'Prices at {trendMarket} are rising by about ₹{slope} a quintal a day, and {crop} stores well. Waiting a week could earn about ₹{gain} more.',
+  'sell.risingPerishable': 'Prices at {trendMarket} are rising, but {crop} does not keep, so sell while it is fresh.',
+  'sell.falling': 'Prices at {trendMarket} are falling by about ₹{slope} a quintal a day, so selling now is safer.',
+  'sell.flat': 'Prices at {trendMarket} have held steady this week, so there is little to gain by waiting.',
+  'sell.note': "Prices are from Agmarknet. Check today's rate at the market before you load.",
+
   'day.today': 'today',
   'day.tomorrow': 'tomorrow',
   'day.other': 'on {weekday}',
@@ -47,6 +58,17 @@ const hi: Messages = {
   'act.sprayWindow.detail': 'आज और कल मौसम सूखा और शांत है, छिड़काव के लिए सुरक्षित समय। पहले लेबल पर मात्रा देखें।',
   'act.sow.title': '{season} की बुवाई शुरू है',
   'act.sow.detail': '{season} मौसम का {n}वाँ दिन। देखें कौन सी फसलें आपके खेत के लिए ठीक हैं।',
+
+  'act.priceUp.title': '{market} में {crop} {pct}% ऊपर',
+  'act.priceUp.detail': 'अभी ₹{price} प्रति क्विंटल। देखें वाहन खर्च के बाद कौन सी मंडी सबसे ज़्यादा देती है।',
+
+  'sell.best': 'वाहन खर्च के बाद {market} में सबसे ज़्यादा मिलेगा: {qty} क्विंटल के ₹{net}।',
+  'sell.risingWait':
+    '{trendMarket} में भाव रोज़ लगभग ₹{slope} प्रति क्विंटल बढ़ रहे हैं, और {crop} रखा जा सकता है। एक हफ़्ता रुकने पर लगभग ₹{gain} ज़्यादा मिल सकते हैं।',
+  'sell.risingPerishable': '{trendMarket} में भाव बढ़ रहे हैं, पर {crop} ज़्यादा दिन नहीं टिकता, इसलिए ताज़ा रहते बेचें।',
+  'sell.falling': '{trendMarket} में भाव रोज़ लगभग ₹{slope} प्रति क्विंटल गिर रहे हैं, इसलिए अभी बेचना सुरक्षित है।',
+  'sell.flat': 'इस हफ़्ते {trendMarket} में भाव स्थिर रहे हैं, इसलिए रुकने से ख़ास फ़ायदा नहीं।',
+  'sell.note': 'भाव एगमार्कनेट से हैं। माल लादने से पहले मंडी का आज का भाव पता कर लें।',
 
   'day.today': 'आज',
   'day.tomorrow': 'कल',
@@ -73,6 +95,17 @@ const mr: Messages = {
   'act.sow.title': '{season} पेरणी सुरू आहे',
   'act.sow.detail': '{season} हंगामाचा {n}वा दिवस. तुमच्या शेतासाठी कोणती पिके योग्य आहेत ते पाहा.',
 
+  'act.priceUp.title': '{market} मध्ये {crop} {pct}% वाढला',
+  'act.priceUp.detail': 'सध्या ₹{price} प्रति क्विंटल. वाहतूक खर्चानंतर कोणती बाजार समिती जास्त देते ते पाहा.',
+
+  'sell.best': 'वाहतूक खर्चानंतर {market} मध्ये सर्वात जास्त मिळेल: {qty} क्विंटलचे ₹{net}.',
+  'sell.risingWait':
+    '{trendMarket} मध्ये भाव रोज सुमारे ₹{slope} प्रति क्विंटल वाढत आहेत, आणि {crop} साठवता येतो. एक आठवडा थांबल्यास सुमारे ₹{gain} जास्त मिळू शकतात.',
+  'sell.risingPerishable': '{trendMarket} मध्ये भाव वाढत आहेत, पण {crop} जास्त दिवस टिकत नाही, म्हणून ताजे असतानाच विका.',
+  'sell.falling': '{trendMarket} मध्ये भाव रोज सुमारे ₹{slope} प्रति क्विंटल घसरत आहेत, म्हणून आता विकणे सुरक्षित आहे.',
+  'sell.flat': 'या आठवड्यात {trendMarket} मध्ये भाव स्थिर राहिले, त्यामुळे थांबून फारसा फायदा नाही.',
+  'sell.note': 'भाव ॲगमार्कनेटवरून आहेत. माल भरण्यापूर्वी बाजार समितीतील आजचा भाव खात्री करून घ्या.',
+
   'day.today': 'आज',
   'day.tomorrow': 'उद्या',
   'day.other': '{weekday}',
@@ -91,6 +124,10 @@ export function dayLabel(lang: LangCode, iso: string, offset: number): string {
   if (offset === 1) return t(lang, 'day.tomorrow')
   return t(lang, 'day.other', { weekday: weekday(lang, iso) })
 }
+
+const inr = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 })
+/** 125000 → "1,25,000" (Indian grouping, same digits in every language). */
+export const rupees = (n: number) => inr.format(Math.round(n))
 
 /** Capitalise the first letter for English titles that start with a day label. */
 export const sentenceCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)

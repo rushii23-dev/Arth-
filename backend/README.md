@@ -25,7 +25,8 @@ npm test
 | `src/schemas.ts` | zod schemas mirroring `frontend/src/lib/api/types.ts` |
 | `src/store/` | `Store` interface with memory and Firestore versions |
 | `src/routes/` | One file per API area |
-| `src/services/` | Weather, seasons, brief logic |
+| `src/services/` | Weather, mandi, sell advice, seasons, brief |
+| `src/data/` | Districts (coordinates, Marathi names), crops (Agmarknet names, en/hi/mr) |
 | `src/lib/` | IST dates and the en/hi/mr messages |
 
 ## Status
@@ -35,5 +36,6 @@ npm test
 | `GET /health` | done |
 | `GET/PUT/DELETE /farmer/me` | done (soil type defaults to black until `/soil` lands) |
 | `GET /weather` | done: Open-Meteo (no key), 30-min cache, rain/wind/heat/heavy-rain advisories in en/hi/mr |
-| `GET /brief` | done: weather actions, sowing nudge, season progress; price alerts and crop stages come with mandi and calendar |
-| `/mandi/*`, `/ai/*`, `/calendar`, `/soil`, `/schemes/*` | to build |
+| `GET /brief` | done: weather and price actions, price alerts, sowing nudge, season progress; crop stages come with the calendar |
+| `GET /mandi/prices`, `POST /mandi/sell-advice` | done: Agmarknet via data.gov.in, 3-hour cache that keeps the last good prices; needs a personal data.gov.in key (the public sample key returns only 10 rows) |
+| `/ai/*`, `/calendar`, `/soil`, `/schemes/*` | to build |

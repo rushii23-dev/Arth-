@@ -9,6 +9,8 @@ export interface Config {
   geminiApiKey: string
   model: string
   dataGovInApiKey: string
+  /** Rough truck cost used in sell advice, ₹ per quintal per km. */
+  transportRsPerQuintalKm: number
 }
 
 export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
@@ -23,6 +25,7 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     geminiApiKey: e.GEMINI_API_KEY ?? '',
     model: e.ARTH_MODEL ?? '',
     dataGovInApiKey: e.ARTH_DATA_GOV_IN_API_KEY ?? '',
+    transportRsPerQuintalKm: Number(e.ARTH_TRANSPORT_RS_PER_QUINTAL_KM ?? 2),
   }
   if (!cfg.firebaseProjectId && env !== 'test') throw new Error('ARTH_FIREBASE_PROJECT_ID is required')
   if (store !== 'memory' && store !== 'firestore') throw new Error(`ARTH_STORE must be memory or firestore, got ${store}`)
