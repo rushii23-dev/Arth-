@@ -1,0 +1,352 @@
+@import "tailwindcss";
+
+/*
+ * The three typefaces, served from the app itself rather than Google Fonts:
+ * they work offline once seen, and opening the app sends no request to any
+ * third party but the weather service. SIL Open Font License, texts in
+ * public/fonts/. Only the Devanagari and basic Latin subsets are kept; the
+ * unicode-range lets the browser fetch just the ones a screen uses.
+ */
+@font-face {
+  font-family: 'Tiro Devanagari Hindi';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/tiro-devanagari-hindi-devanagari.woff2') format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+@font-face {
+  font-family: 'Tiro Devanagari Hindi';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/tiro-devanagari-hindi-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Tiro Devanagari Hindi';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/tiro-devanagari-hindi-italic-devanagari.woff2') format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+@font-face {
+  font-family: 'Tiro Devanagari Hindi';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/tiro-devanagari-hindi-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Anek Devanagari';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/anek-devanagari-devanagari.woff2') format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+@font-face {
+  font-family: 'Anek Devanagari';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/anek-devanagari-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme {
+  /* Type — Tiro for display (has a true italic), Anek for UI, Inter for figures */
+  --font-display: "Tiro Devanagari Hindi", Georgia, serif;
+  --font-ui: "Anek Devanagari", system-ui, sans-serif;
+  --font-num: "Inter", system-ui, sans-serif;
+
+  /* Canvas + surfaces */
+  --color-canvas: #dcd7c9;
+  --color-screen: #e9e5da;
+  --color-card: #ffffff;
+  --color-chip: #efece2;
+  --color-hair: #f2efe6;
+
+  /* Ink */
+  --color-ink: #17150f;
+  --color-ink-2: #4a4638;
+  --color-muted: #6e6a5e;
+  --color-faint: #8a8574;
+  --color-ghost: #a8a292;
+  --color-hint: #c8c3b4;
+  --color-track: #d6d1c2;
+
+  /* Green — growth, go, good */
+  --color-grow: #2e6b3f;
+  --color-grow-d: #245231;
+  --color-grow-l: #e6efe4;
+
+  /* Orange — reserved for risk */
+  --color-warn: #c1531b;
+  --color-warn-d: #8c3a0f;
+  --color-warn-m: #a05a2e;
+  --color-warn-l: #fbeadf;
+
+  /* Amber — caution, "wait" (between go and risk) */
+  --color-amber: #b07d12;
+  --color-amber-l: #f8efd6;
+
+  /* Danger — warnings on pesticide labels */
+  --color-danger: #b3261e;
+  --color-danger-l: #fbe4e2;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* figures align in cards */
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.display { font-family: var(--font-display); }
+
+/* hidden scrollbars on the horizontal rails */
+.sc { scrollbar-width: none; -ms-overflow-style: none; }
+.sc::-webkit-scrollbar { display: none; }
+
+/* visible keyboard focus everywhere, never on touch */
+:focus-visible { outline: 3px solid var(--color-grow); outline-offset: 2px; border-radius: 12px; }
+
+@keyframes arthfade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.fade { animation: arthfade .28s ease both; }
+
+/* the app is a phone; never let a stray element widen it */
+#root { overflow-x: hidden; }
+
+/* Listening pulse on the mic */
+@keyframes arth-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(193, 83, 27, .45); }
+  50%      { box-shadow: 0 0 0 18px rgba(193, 83, 27, 0); }
+}
+.arth-pulse { animation: arth-pulse 1.6s ease-out infinite; }
+
+/* skeleton shimmer */
+@keyframes arth-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-chip) 0%, var(--color-hair) 50%, var(--color-chip) 100%);
+  background-size: 200% 100%;
+  animation: arth-shimmer 1.4s ease-in-out infinite;
+}
+
+/* bottom sheet */
+@keyframes arth-sheet { from { transform: translateY(100%); } to { transform: none; } }
+.sheet-in { animation: arth-sheet .32s cubic-bezier(.22,.7,.2,1) both; }
+
+/* ---- Login: dawn ------------------------------------------------------- */
+@keyframes arth-sunrise {
+  from { transform: translateY(70px); opacity: .55; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes arth-glow {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50%      { opacity: .8;  transform: scale(1.06); }
+}
+@keyframes arth-drift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-14px); }
+}
+@keyframes arth-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes arth-settle {
+  from { opacity: 0; transform: scale(1.1); letter-spacing: .1em; }
+  to   { opacity: 1; transform: scale(1); letter-spacing: 0; }
+}
+.dawn-sun   { animation: arth-sunrise 2.6s cubic-bezier(.22,.7,.2,1) both; }
+.dawn-glow  { animation: arth-glow 6s ease-in-out 2.6s infinite; transform-origin: center; }
+.dawn-far   { animation: arth-drift 18s ease-in-out infinite alternate; }
+.dawn-mark  { animation: arth-settle 1.4s cubic-bezier(.22,.7,.2,1) .3s both; }
+.dawn-up-1  { animation: arth-rise .8s ease-out .9s both; }
+.dawn-up-2  { animation: arth-rise .8s ease-out 1.15s both; }
+.dawn-up-3  { animation: arth-rise .8s ease-out 1.4s both; }
+.tagline    { transition: opacity .6s ease, transform .6s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade, .arth-pulse, .skeleton, .sheet-in,
+  .dawn-sun, .dawn-glow, .dawn-far, .dawn-mark, .dawn-up-1, .dawn-up-2, .dawn-up-3 {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    letter-spacing: 0;
+  }
+  .tagline { transition: none; }
+}
+
+/* Wide letter-spacing splits Devanagari conjuncts apart ("आ म चा"), so the
+   eyebrow tracking used across the app only applies to English. */
+html:not([lang="en"]) [class*="tracking-["] { letter-spacing: 0.01em !important; }
+
+/* ---- Bottom nav: a floating bar of five tabs, the voice button beside it -- */
+.arth-nav {
+  --nav-side: 12px;
+  --nav-pad: 6px;
+  --nav-h: 68px;
+  --nav-bottom: max(12px, env(safe-area-inset-bottom));
+  position: absolute;
+  z-index: 20;
+  left: var(--nav-side);
+  right: var(--nav-side);
+  bottom: var(--nav-bottom);
+  display: flex;
+  align-items: stretch;
+  height: var(--nav-h);
+  padding: var(--nav-pad);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(23, 21, 15, .06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .9) inset,
+    0 18px 36px -16px rgba(23, 21, 15, .28),
+    0 3px 10px -4px rgba(23, 21, 15, .08);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  backdrop-filter: saturate(1.4) blur(14px);
+}
+/* the voice button gets its own circle to the right, so the bar is never crowded */
+.arth-nav[data-mic] { right: calc(var(--nav-side) + var(--nav-h) + 8px); }
+.arth-nav-tabs {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.arth-nav-tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 999px;
+  color: var(--color-muted);
+  background: none;
+  border: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.arth-nav-icon {
+  display: flex;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  transition: transform .18s ease, color .25s ease;
+}
+.arth-nav-tab:active .arth-nav-icon { transform: scale(.88); }
+.arth-nav-tab[data-active] .arth-nav-icon { color: #fff; }
+.arth-nav-label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  font-size: 11.5px;
+  line-height: 14px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: var(--color-muted);
+  transition: color .25s ease;
+}
+.arth-nav-tab[data-active] .arth-nav-label { font-weight: 700; color: var(--color-grow-d); }
+/* the pill behind the active icon: one per bar, slid to the active column */
+.arth-nav-thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transition: transform .45s cubic-bezier(.22, .9, .24, 1);
+}
+.arth-nav-thumb > span {
+  /* centred on the icon row: (bar content − icon − gap − label) / 2 */
+  margin-top: calc((var(--nav-h) - 2 * var(--nav-pad) - 2px - 30px - 3px - 14px) / 2);
+  height: 30px;
+  width: min(52px, calc(100% - 4px));
+  border-radius: 999px;
+  background: var(--color-grow);
+  box-shadow: 0 6px 14px -6px rgba(46, 107, 63, .65);
+  animation: arth-pill-in .35s ease both;
+}
+@keyframes arth-pill-in { from { transform: scaleX(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+/* MicButton docked beside the bar: same height, brand green while idle */
+.arth-nav-mic {
+  width: 68px;
+  height: 68px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .25) inset,
+    0 14px 26px -10px rgba(36, 82, 49, .70);
+}
+.arth-nav-mic.bg-ink { background: linear-gradient(160deg, #3a8150, var(--color-grow-d)); }
+/* the screen fades out under the bar, so half-hidden rows don't peek below it */
+.arth-nav-scrim {
+  position: absolute;
+  z-index: 19;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(max(12px, env(safe-area-inset-bottom)) + 56px);
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(233, 229, 218, 0), var(--color-screen) 60%);
+}
+.arth-float-mic {
+  right: 16px;
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+}
+
+/* ---- Language switcher: segmented control with a sliding thumb ---------- */
+.arth-lang-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 3);
+  transition: transform .42s cubic-bezier(.22, .9, .24, 1);
+  pointer-events: none;
+}
+.arth-lang-check { animation: arth-check-in .3s cubic-bezier(.3, 1.5, .5, 1) both; }
+@keyframes arth-check-in { from { transform: scale(0); } to { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .arth-nav-thumb, .arth-lang-thumb { transition: none; }
+  .arth-nav-thumb > span, .arth-lang-check { animation: none; }
+  .arth-nav-tab:active .arth-nav-icon { transform: none; }
+}
+@media (max-width: 340px) {
+  .arth-nav { --nav-side: 8px; }
+  .arth-nav-mic { right: 8px; }
+  .arth-nav-label { font-size: 10.5px; }
+}

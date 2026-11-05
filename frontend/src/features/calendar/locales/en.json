@@ -1,0 +1,82 @@
+{
+  "title": "Crop calendar",
+  "subtitle": "What to sow this season, week by week",
+  "season": "Season",
+  "seasons": {
+    "kharif": "Kharif",
+    "rabi": "Rabi",
+    "zaid": "Summer"
+  },
+  "seasonMonths": {
+    "kharif": "Jun – Sep",
+    "rabi": "Oct – Jan",
+    "zaid": "Feb – May"
+  },
+  "now": "Now",
+  "yourFarm": "Your farm",
+  "soilChip": "{{soil}} soil",
+  "editFarm": "Change",
+  "recommended": "Good crops for you",
+  "suitability": {
+    "high": "Very suitable",
+    "medium": "Suitable",
+    "low": "Less suitable"
+  },
+  "sowing": "Sowing",
+  "duration": "{{days}} days",
+  "durationLabel": "Crop duration",
+  "why": "Why this crop",
+  "openPlan": "See week-by-week plan",
+  "plan": "Week-by-week plan",
+  "week": "Week {{n}}",
+  "weekOf": "from {{date}}",
+  "backToList": "Back to crops",
+  "harvestBy": "Harvest around {{date}}",
+  "emptyTitle": "No crops to suggest",
+  "emptyBody": "We have no recommendations for this season on your soil and water. Try another season or ask an expert.",
+  "planEmpty": "The weekly plan for this crop isn't ready yet.",
+  "expertReason": "Seed variety, fertiliser and spray doses depend on your field. Check with Kisan Call Centre or your local agriculture officer before buying.",
+  "basedOn": "Soil from your district's Soil Health Card tests, water from your profile",
+  "whyNow": {
+    "teaser": "Why now",
+    "title": "Why sow this now",
+    "weather": "Weather",
+    "market": "Market",
+    "news": "In the news",
+    "readMore": "Opens {{source}} in a new tab",
+    "footnote": "Weather updates live; news from the sources shown.",
+    "soil": "Soil"
+  },
+  "today": "Today is {{date}}",
+  "seasonLine_one": "{{season}} sowing season · {{count}} day left",
+  "seasonLine_other": "{{season}} sowing season · {{count}} days left",
+  "map": {
+    "title": "Your farming year",
+    "a11y": "Farming year map, today {{date}}",
+    "onset": "Monsoon expected here around {{date}}"
+  },
+  "phase": {
+    "sow": "Sow / start",
+    "grow": "Growing",
+    "protect": "Watch & protect",
+    "harvest": "Harvest",
+    "rest": "Off season"
+  },
+  "field": { "title": "In your field now", "usually": "Usually now" },
+  "sowNow": "You can sow these now",
+  "comingUp": "Coming up",
+  "status": {
+    "open_one": "Open · {{count}} day left",
+    "open_other": "Open · {{count}} days left",
+    "upcoming_one": "Opens in {{count}} day",
+    "upcoming_other": "Opens in {{count}} days"
+  },
+  "followsMonsoon": "Follows the monsoon",
+  "onset": {
+    "title": "Monsoon here: around {{date}}",
+    "earlier": "That is {{days}} days earlier than the {{old}} the record started with, so kharif sowing here moves earlier too.",
+    "later": "That is {{days}} days later than the {{old}} the record started with, so kharif sowing here waits for it.",
+    "noChange": "No measurable shift here; kharif dates follow the long-term onset, not a fixed calendar date.",
+    "source": "IMD daily rainfall, {{years}}"
+  }
+}
