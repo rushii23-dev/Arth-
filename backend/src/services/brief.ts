@@ -2,6 +2,7 @@ import { CROPS, cropName } from '../data/crops.js'
 import { rupees, sentenceCase, t } from '../lib/i18n.js'
 import { daysBetween, istDate, type Clock, type LangCode } from '../lib/time.js'
 import type { FarmerProfile } from '../schemas.js'
+import { fieldCrops } from './calendar.js'
 import { analyse, type MandiSource } from './mandi.js'
 import { seasonNow, seasonOn } from './seasons.js'
 import { advisories, sprayWindowOpen, type Advisory, type ForecastSource } from './weather.js'
@@ -154,7 +155,7 @@ export async function buildBrief(
     weather: forecast.daily.slice(0, 4),
     actions: actions.slice(0, MAX_ACTIONS),
     priceAlerts: alerts,
-    inField: [], // filled once the crop calendar is built
+    inField: fieldCrops(profile.crops, today, lang),
     seasonNow: season,
     toolCalls,
   }

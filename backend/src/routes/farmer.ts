@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { AuthVars } from '../auth.js'
 import { ApiError, badRequest, notFound } from '../errors.js'
 import { FarmerProfileInput, type FarmerProfile } from '../schemas.js'
+import { soilOf } from '../services/soil.js'
 import type { Store } from '../store/types.js'
 
 export function farmerRoutes(store: Store) {
@@ -30,8 +31,7 @@ export function farmerRoutes(store: Store) {
     const profile: FarmerProfile = {
       ...input,
       // SPEC: soil is never asked; it comes from the district unless the farmer corrected it.
-      // The district lookup arrives with the /soil service; until then black soil, Maharashtra's most common.
-      soilType: farmerSetSoil ? input.soilType! : (input.soilType ?? existing?.soilType ?? 'black'),
+      soilType: farmerSetSoil ? input.soilType! : soilOf(input.district),
       soilSource: farmerSetSoil ? 'farmer' : 'auto',
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,

@@ -10,6 +10,7 @@ import type { Clock } from './lib/time.js'
 import { farmerRoutes } from './routes/farmer.js'
 import { aiRoutes } from './routes/ai.js'
 import { mandiRoutes } from './routes/mandi.js'
+import { planRoutes } from './routes/plan.js'
 import { weatherRoutes } from './routes/weather.js'
 import type { Llm } from './services/llm.js'
 import type { MandiSource } from './services/mandi.js'
@@ -32,12 +33,13 @@ export function createApp({ config, store, verifyToken, forecast, mandi, llm, ai
   const api = new Hono<{ Variables: AuthVars }>()
 
   api.get('/health', (c) =>
-    c.json({ ok: true, model: config.model, modelReady: Boolean(config.geminiApiKey), cloudSync: false }),
+    c.json({ ok: true, model: config.model, modelReady: Boolean(config.geminiApiKey), cloudSync: true }),
   )
 
   api.use('*', requireAuth(verifyToken))
   api.route('/farmer', farmerRoutes(store))
   api.route('/', weatherRoutes({ store, forecast, mandi, clock }))
+  api.route('/', planRoutes({ store, forecast, mandi, clock }))
   api.route('/mandi', mandiRoutes({ mandi, rsPerQuintalKm: config.transportRsPerQuintalKm }))
   api.route('/ai', aiRoutes({ llm, models: { vision: config.model, audio: config.audioModel }, limit: aiLimit }))
 

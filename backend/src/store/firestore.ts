@@ -18,5 +18,8 @@ export function firestoreStore(): Store {
     async deleteFarmer(uid) {
       await db.recursiveDelete(farmer(uid))
     },
+    async addSchemeInterest(record) {
+      await db.collection('schemeInterest').doc(record.recordId).set(record)
+    },
   }
 }
