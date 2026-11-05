@@ -36,7 +36,8 @@ export const ESCALATE_BELOW = 0.6
 
 const CropReply = z.object({
   isPlant: z.boolean().catch(true).default(true),
-  diagnosis: text,
+  // Gemma sends null here for a photo that is not a plant (seen live)
+  diagnosis: z.string().trim().nullable().catch(null).default(null).transform((s) => s ?? ''),
   scientificName: z.string().trim().nullable().catch(null).default(null),
   confidence,
   severity: z.enum(['low', 'medium', 'high']).catch('medium'),

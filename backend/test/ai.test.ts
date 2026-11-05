@@ -216,3 +216,10 @@ it('a missing API key gives 503 ai_not_configured', async () => {
   })
   expect(vi.isMockFunction(llm)).toBe(false)
 })
+
+it('picks the thinking setting each model family accepts (checked live)', async () => {
+  const { thinkingFor } = await import('../src/services/llm.js')
+  expect(thinkingFor('gemma-4-26b-a4b-it')).toEqual({ thinkingLevel: 'MINIMAL' })
+  expect(thinkingFor('gemini-2.5-flash')).toEqual({ thinkingBudget: 0 })
+  expect(thinkingFor('gemini-3.8-flash')).toEqual({ thinkingLevel: 'LOW' })
+})
