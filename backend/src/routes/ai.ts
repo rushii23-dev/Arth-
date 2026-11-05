@@ -4,7 +4,8 @@ import type { AuthVars } from '../auth.js'
 import { CROPS } from '../data/crops.js'
 import { ApiError, badRequest } from '../errors.js'
 import { Lang } from '../schemas.js'
-import { cropDoctor, explainDocument, labelReader, voice, type AiModels, type Media } from '../services/ai.js'
+import { explainDocument, labelReader, voice, type AiModels, type Media } from '../services/ai.js'
+import { cropDoctor, type DoctorCache } from '../services/doctor.js'
 import type { Llm } from '../services/llm.js'
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -64,6 +65,7 @@ export function rateLimiter(perMinute: number, now = Date.now) {
 export function aiRoutes(deps: { llm: Llm; models: AiModels; limit?: (uid: string) => void }) {
   const r = new Hono<{ Variables: AuthVars }>()
   const limit = deps.limit ?? rateLimiter(AI_CALLS_PER_MINUTE)
+  const doctorCache: DoctorCache = new Map()
   r.use('*', async (c, next) => {
     limit(c.get('uid'))
     // SPEC §3: AI answers are never cached
@@ -76,7 +78,7 @@ export function aiRoutes(deps: { llm: Llm; models: AiModels; limit?: (uid: strin
     const image = await media(form, 'image', IMAGE_TYPES, MAX_IMAGE_BYTES)
     const lang = field(Lang.default('en'), form, 'lang')
     const crop = field(z.string().refine((x) => x in CROPS).optional(), form, 'crop')
-    return c.json(await cropDoctor(deps.llm, deps.models, image, lang, crop))
+    return c.json(await cropDoctor(deps.llm, deps.models.vision, image, lang, crop, doctorCache))
   })
 
   r.post('/label-reader', async (c) => {

@@ -6,6 +6,10 @@ import { scaleDose } from '../src/services/ai.js'
 import { extractJson, type JsonRequest, type Llm } from '../src/services/llm.js'
 import { redact } from '../src/services/pii.js'
 import { memoryStore } from '../src/store/memory.js'
+import { CONDITIONS } from '../src/data/conditions.js'
+import { CROPS } from '../src/data/crops.js'
+import HI from '../src/data/conditions.hi.json' with { type: 'json' }
+import MR from '../src/data/conditions.mr.json' with { type: 'json' }
 
 const config = loadConfig({ ARTH_ENV: 'test', ARTH_FIREBASE_PROJECT_ID: 'p', GEMINI_API_KEY: 'k' })
 
@@ -66,33 +70,67 @@ describe('model replies', () => {
 })
 
 describe('POST /ai/crop-doctor', () => {
-  const reply = {
-    isPlant: true,
-    diagnosis: 'Purple blotch',
-    scientificName: 'Alternaria porri',
-    confidence: 85,
-    severity: 'medium',
-    symptoms: ['Purple spots with yellow rims'],
-    treatment: { organic: ['Neem oil spray'], chemical: ['Mancozeb'] },
-    prevention: ['Avoid overhead irrigation'],
-  }
+  const reply = { isPlant: true, photoClear: true, conditionId: 'onion.purple_blotch', confidence: 85, severity: 'medium' }
+  const purple = CONDITIONS.find((c) => c.id === 'onion.purple_blotch')!
 
-  it('returns the SPEC shape, turns 85 into 0.85, and sends no personal data', async () => {
+  it('the model only picks; the farmer gets the checked advice, in their language', async () => {
     const { app, calls } = appWith(reply)
     const res = await post(app, '/ai/crop-doctor', { image: jpeg(), lang: 'mr', crop: 'onion' })
     expect(res.status).toBe(200)
     expect(res.headers.get('Cache-Control')).toBe('no-store')
     const b = await res.json()
-    expect(b).toEqual({ ...reply, isPlant: undefined, confidence: 0.85, escalate: false, model: 'gemma-4-26b-a4b-it' })
-    expect(calls[0]!.model).toBe('gemma-4-26b-a4b-it')
-    expect(calls[0]!.system).toContain('Marathi')
+    const mrText = (MR as Record<string, { name: string; symptoms: string[]; organic: string[]; chemical: string[]; prevention: string[] }>)[purple.id]!
+    expect(b).toEqual({
+      diagnosis: mrText.name,
+      scientificName: 'Alternaria porri',
+      confidence: 0.85,
+      severity: 'medium',
+      symptoms: mrText.symptoms,
+      treatment: { organic: mrText.organic, chemical: [...mrText.chemical, expect.stringContaining('लेबल')] },
+      prevention: mrText.prevention,
+      escalate: false,
+      model: 'gemma-4-26b-a4b-it',
+    })
+    // only onion problems are offered, and nothing personal is sent
+    expect(calls[0]!.system).toContain('onion.thrips')
+    expect(calls[0]!.system).not.toContain('tomato.')
     expect(JSON.stringify(calls[0]!.parts.filter((p) => 'text' in p))).toBe('[{"text":"The farmer says this is Onion."}]')
   })
 
-  it('escalates when unsure or when the photo is not a plant', async () => {
-    expect((await (await post(appWith({ ...reply, confidence: 0.4 }).app, '/ai/crop-doctor', { image: jpeg() })).json()).escalate).toBe(true)
-    const notPlant = await (await post(appWith({ ...reply, isPlant: false }).app, '/ai/crop-doctor', { image: jpeg() })).json()
-    expect(notPlant).toMatchObject({ escalate: true, confidence: 0 })
+  it('gives the same answer for the same photo without asking the model again', async () => {
+    const { app, calls } = appWith(reply)
+    const a = await (await post(app, '/ai/crop-doctor', { image: jpeg(), lang: 'en', crop: 'onion' })).json()
+    const b = await (await post(app, '/ai/crop-doctor', { image: jpeg(), lang: 'en', crop: 'onion' })).json()
+    expect(b).toEqual(a)
+    expect(calls).toHaveLength(1)
+    expect(a.diagnosis).toBe('Purple blotch')
+    expect(a.treatment.chemical.slice(0, 3)).toEqual(['Mancozeb', 'Tebuconazole', 'Difenoconazole'])
+  })
+
+  it('says "not identified" and escalates for an unknown pick, another crop\'s disease, a non-plant or an unclear photo', async () => {
+    for (const r of [
+      { ...reply, conditionId: 'unknown' },
+      { ...reply, conditionId: 'onion.made_up' },
+      { ...reply, conditionId: 'tomato.early_blight' },
+      { ...reply, isPlant: false },
+      { ...reply, photoClear: false },
+    ]) {
+      const b = await (await post(appWith(r).app, '/ai/crop-doctor', { image: jpeg(), lang: 'en', crop: 'onion' })).json()
+      expect(b).toMatchObject({ diagnosis: 'Could not identify the problem', confidence: 0, escalate: true, treatment: { organic: [], chemical: [] } })
+    }
+  })
+
+  it('keeps the checked advice but escalates when the model is unsure', async () => {
+    const b = await (await post(appWith({ ...reply, confidence: 0.4 }).app, '/ai/crop-doctor', { image: jpeg(), crop: 'onion' })).json()
+    expect(b).toMatchObject({ diagnosis: 'Purple blotch', confidence: 0.4, escalate: true })
+  })
+
+  it('escalates a close call between two look-alike problems', async () => {
+    const close = { ...reply, conditionId: 'grapes.downy_mildew', confidence: 0.7, runnerUpId: 'grapes.powdery_mildew', runnerUpConfidence: 0.6 }
+    const b = await (await post(appWith(close).app, '/ai/crop-doctor', { image: jpeg(), crop: 'grapes' })).json()
+    expect(b).toMatchObject({ diagnosis: 'Downy mildew', escalate: true })
+    const clear = { ...close, runnerUpConfidence: 0.2 }
+    expect((await (await post(appWith(clear).app, '/ai/crop-doctor', { image: jpeg(), crop: 'grapes' })).json()).escalate).toBe(false)
   })
 
   it('rejects a missing image, a wrong type and a non-multipart body', async () => {
@@ -102,6 +140,36 @@ describe('POST /ai/crop-doctor', () => {
     expect((await post(app, '/ai/crop-doctor', { image: gif })).status).toBe(415)
     const json = await app.request('/ai/crop-doctor', { method: 'POST', headers: { Authorization: 'Bearer x', 'Content-Type': 'application/json' }, body: '{}' })
     expect(json.status).toBe(400)
+  })
+})
+
+describe('crop doctor knowledge', () => {
+  type Entry = { name: string; symptoms: string[]; organic: string[]; chemical: string[]; prevention: string[] }
+  const langs = { hi: HI as Record<string, Entry>, mr: MR as Record<string, Entry> }
+
+  it('covers every crop with problems and a healthy entry, with unique ids', () => {
+    expect(new Set(CONDITIONS.map((c) => c.id)).size).toBe(CONDITIONS.length)
+    for (const crop of Object.keys(CROPS)) {
+      const own = CONDITIONS.filter((c) => c.crop === crop)
+      expect(own.some((c) => c.kind === 'healthy'), crop).toBe(true)
+      expect(own.length, crop).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('has a complete Hindi and Marathi version of every entry', () => {
+    for (const [lang, table] of Object.entries(langs)) {
+      for (const c of CONDITIONS) {
+        const e = table[c.id]
+        expect(e, `${lang} ${c.id}`).toBeDefined()
+        for (const k of ['symptoms', 'organic', 'chemical', 'prevention'] as const) expect(e![k].length, `${lang} ${c.id} ${k}`).toBe(c[k].length)
+        expect(/[\u0900-\u097F]/.test(e!.name), `${lang} ${c.id} name in Devanagari`).toBe(true)
+      }
+    }
+  })
+
+  it('never states a dose', () => {
+    const dose = /\d+(\.\d+)?\s*(ml|g|gm|kg|l|litre|liter)\b/i
+    for (const c of CONDITIONS) for (const line of c.chemical) expect(dose.test(line), `${c.id}: ${line}`).toBe(false)
   })
 })
 

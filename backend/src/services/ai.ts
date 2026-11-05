@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { cropName } from '../data/crops.js'
 import type { LangCode } from '../lib/time.js'
 import type { Llm } from './llm.js'
 import { redact, redactDeep, type PiiKind } from './pii.js'
@@ -29,48 +28,10 @@ const confidence = z.coerce.number().transform((n) => Math.min(1, Math.max(0, n 
 const list = z.array(z.string().trim().min(1)).catch([]).default([])
 const text = z.string().trim()
 
-/** Below this the app sends the farmer to the Kisan Call Centre instead of trusting the answer. */
-export const ESCALATE_BELOW = 0.6
+export { ESCALATE_BELOW } from './doctor.js'
+import { ESCALATE_BELOW } from './doctor.js'
 
-// ---- Crop doctor -------------------------------------------------------------------
-
-const CropReply = z.object({
-  isPlant: z.boolean().catch(true).default(true),
-  // Gemma sends null here for a photo that is not a plant (seen live)
-  diagnosis: z.string().trim().nullable().catch(null).default(null).transform((s) => s ?? ''),
-  scientificName: z.string().trim().nullable().catch(null).default(null),
-  confidence,
-  severity: z.enum(['low', 'medium', 'high']).catch('medium'),
-  symptoms: list,
-  treatment: z.object({ organic: list, chemical: list }).catch({ organic: [], chemical: [] }),
-  prevention: list,
-})
-
-export async function cropDoctor(llm: Llm, models: AiModels, image: Media, lang: LangCode, crop?: string) {
-  const r = await llm({
-    model: models.vision,
-    system:
-      `${COMMON(lang)} You are a crop doctor. Look at the photo of a plant and name the most likely disease, pest ` +
-      `or deficiency. For chemical treatment name the active ingredient only, never a dose: the farmer reads the dose ` +
-      `from the product label. If the photo is not a plant, or too blurry to judge, set isPlant false or confidence below 0.5.`,
-    parts: [
-      { media: image },
-      { text: crop ? `The farmer says this is ${cropName(crop, 'en')}.` : 'The farmer did not say which crop this is.' },
-    ],
-    schema: CropReply,
-    shape:
-      '{"isPlant":true,"diagnosis":"…","scientificName":"… or null","confidence":0.0,"severity":"low|medium|high",' +
-      '"symptoms":["…"],"treatment":{"organic":["…"],"chemical":["…"]},"prevention":["…"]}',
-  })
-  const { isPlant, ...rest } = r
-  const out = redactDeep(rest).value
-  return {
-    ...out,
-    confidence: isPlant ? out.confidence : 0,
-    escalate: !isPlant || out.confidence < ESCALATE_BELOW,
-    model: models.vision,
-  }
-}
+// The crop doctor lives in doctor.ts: it picks from checked advice instead of writing its own.
 
 // ---- Label reader ------------------------------------------------------------------
 

@@ -34,6 +34,11 @@ const en: Messages = {
   'sell.flat': 'Prices at {trendMarket} have held steady this week, so there is little to gain by waiting.',
   'sell.note': "Prices are from Agmarknet. Check today's rate at the market before you load.",
 
+  'doctor.labelNote': 'Use only the dose printed on the product label. Scan the label with Label reader to see it for your tank.',
+  'doctor.unknown': 'Could not identify the problem',
+  'doctor.unknownDetail': 'This photo does not clearly match a known problem of this crop.',
+  'doctor.retakeTip': 'Take a close, sharp photo of one affected leaf in daylight, or call the Kisan Call Centre.',
+
   'day.today': 'today',
   'day.tomorrow': 'tomorrow',
   'day.other': 'on {weekday}',
@@ -70,6 +75,11 @@ const hi: Messages = {
   'sell.flat': 'इस हफ़्ते {trendMarket} में भाव स्थिर रहे हैं, इसलिए रुकने से ख़ास फ़ायदा नहीं।',
   'sell.note': 'भाव एगमार्कनेट से हैं। माल लादने से पहले मंडी का आज का भाव पता कर लें।',
 
+  'doctor.labelNote': 'केवल उत्पाद के लेबल पर छपी मात्रा ही इस्तेमाल करें। अपनी टंकी के लिए मात्रा देखने हेतु लेबल रीडर से लेबल स्कैन करें।',
+  'doctor.unknown': 'समस्या की पहचान नहीं हो सकी',
+  'doctor.unknownDetail': 'यह फ़ोटो इस फसल की किसी जानी-पहचानी समस्या से साफ़ मेल नहीं खाती।',
+  'doctor.retakeTip': 'दिन की रोशनी में एक प्रभावित पत्ते की पास से साफ़ फ़ोटो लें, या किसान कॉल सेंटर पर कॉल करें।',
+
   'day.today': 'आज',
   'day.tomorrow': 'कल',
   'day.other': '{weekday} को',
@@ -105,6 +115,11 @@ const mr: Messages = {
   'sell.falling': '{trendMarket} मध्ये भाव रोज सुमारे ₹{slope} प्रति क्विंटल घसरत आहेत, म्हणून आता विकणे सुरक्षित आहे.',
   'sell.flat': 'या आठवड्यात {trendMarket} मध्ये भाव स्थिर राहिले, त्यामुळे थांबून फारसा फायदा नाही.',
   'sell.note': 'भाव ॲगमार्कनेटवरून आहेत. माल भरण्यापूर्वी बाजार समितीतील आजचा भाव खात्री करून घ्या.',
+
+  'doctor.labelNote': 'फक्त उत्पादनाच्या लेबलवर छापलेली मात्राच वापरा. तुमच्या टाकीसाठी मात्रा पाहण्यासाठी लेबल रीडरने लेबल स्कॅन करा.',
+  'doctor.unknown': 'समस्या ओळखता आली नाही',
+  'doctor.unknownDetail': 'हा फोटो या पिकाच्या कोणत्याही ओळखीच्या समस्येशी स्पष्ट जुळत नाही.',
+  'doctor.retakeTip': 'दिवसाच्या उजेडात एका बाधित पानाचा जवळून स्पष्ट फोटो घ्या, किंवा किसान कॉल सेंटरला फोन करा.',
 
   'day.today': 'आज',
   'day.tomorrow': 'उद्या',

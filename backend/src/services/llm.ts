@@ -18,6 +18,8 @@ export type Llm = <T extends z.ZodType>(req: JsonRequest<T>) => Promise<z.infer<
 
 /** The frontend gives up on /ai/* after 20 s; answer or fail before that. */
 const MODEL_TIMEOUT_MS = 18_000
+/** Fixed so that answers repeat across calls and servers. */
+const SEED = 7
 /** Not worth a retry with less time than this left. */
 const MIN_RETRY_MS = 4_000
 
@@ -75,7 +77,10 @@ export function gemini(apiKey: string, timeoutMs = MODEL_TIMEOUT_MS): Llm {
           contents,
           config: {
             systemInstruction: system,
-            temperature: 0.2,
+            // Same input, same answer: no sampling. Checked live, Gemma 4 repeats itself exactly with these.
+            temperature: 0,
+            topK: 1,
+            seed: SEED,
             responseMimeType: 'application/json',
             maxOutputTokens: 1500,
             thinkingConfig: thinkingFor(model),
