@@ -7,6 +7,12 @@ import { landBand, matchSchemes, type SchemeAnswers } from '../src/services/sche
 import type { Forecast } from '../src/services/weather.js'
 import { memoryStore } from '../src/store/memory.js'
 import type { Store } from '../src/store/types.js'
+import { devanagariLang, wrongLanguage } from '../scripts/lang.js'
+import { TEXTS_EN } from '../src/data/texts.en.js'
+import TEXTS_HI from '../src/data/texts.hi.json' with { type: 'json' }
+import TEXTS_MR from '../src/data/texts.mr.json' with { type: 'json' }
+import COND_HI from '../src/data/conditions.hi.json' with { type: 'json' }
+import COND_MR from '../src/data/conditions.mr.json' with { type: 'json' }
 
 const config = loadConfig({ ARTH_ENV: 'test', ARTH_FIREBASE_PROJECT_ID: 'p' })
 // 5 Nov 2026, 10:00 IST: day 21 of rabi
@@ -189,5 +195,40 @@ describe('calendar', () => {
     await send('PUT', '/farmer/me', NASHIK_FARM)
     const b = await (await get('/brief')).json()
     expect(b.inField.map((f: { stage: string }) => f.stage)).toEqual(['Rabi onion nursery', 'Off season'])
+  })
+})
+
+describe('translations', () => {
+  const flat = (o: unknown, p = ''): [string, string][] =>
+    typeof o === 'string'
+      ? [[p, o]]
+      : Array.isArray(o)
+        ? o.flatMap((x, i) => flat(x, `${p}.${i}`))
+        : Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => flat(v, p ? `${p}.${k}` : k))
+
+  it('every Hindi line is Hindi and every Marathi line is Marathi (not the other language)', () => {
+    for (const [name, table, lang] of [
+      ['texts.hi', TEXTS_HI, 'hi'],
+      ['texts.mr', TEXTS_MR, 'mr'],
+      ['conditions.hi', COND_HI, 'hi'],
+      ['conditions.mr', COND_MR, 'mr'],
+    ] as const) {
+      const wrong = flat(table).filter(([, v]) => wrongLanguage(v, lang)).map(([k]) => k)
+      expect(wrong, `${name} lines in the wrong language`).toEqual([])
+    }
+  })
+
+  it('every English line has a Hindi and a Marathi version with the same placeholders', () => {
+    const holes = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join()
+    for (const [lang, table] of [['hi', TEXTS_HI], ['mr', TEXTS_MR]] as const) {
+      const t = table as Record<string, string>
+      expect(Object.keys(TEXTS_EN).filter((k) => !t[k]), `${lang} missing`).toEqual([])
+      expect(Object.keys(TEXTS_EN).filter((k) => t[k] && holes(t[k]) !== holes(TEXTS_EN[k]!)), `${lang} placeholders`).toEqual([])
+    }
+  })
+
+  it('tells Hindi from Marathi', () => {
+    expect(devanagariLang('खेत में पानी कम दें और जलभराव न होने दें।')).toBe('hi')
+    expect(devanagariLang('शेतात पाणी कमी द्या आणि पाणी साचू देऊ नका.')).toBe('mr')
   })
 })

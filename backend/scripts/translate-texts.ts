@@ -8,10 +8,15 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import { TEXTS_EN } from '../src/data/texts.en.js'
+import { wrongLanguage } from './lang.js'
 
-const LANGS = { hi: 'Hindi', mr: 'Marathi' } as const
+// Spelled out: asked for "Hindi for farmers in Maharashtra", models often write Marathi.
+const LANGS = {
+  hi: 'standard Hindi (हिन्दी) as spoken across North India, NOT Marathi',
+  mr: 'Marathi (मराठी) as spoken in Maharashtra, NOT Hindi',
+} as const
 const MODELS = (process.env.TRANSLATE_MODELS ?? 'gemma-4-31b-it,gemma-4-26b-a4b-it').split(',')
-const BATCH = 15
+const BATCH = 8
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 const placeholders = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join(',')
@@ -39,12 +44,15 @@ async function translateBatch(lang: keyof typeof LANGS, batch: Record<string, st
       })
       const raw = JSON.parse(res.text ?? '')
       const out = (Array.isArray(raw) ? raw[0] : raw) as Record<string, unknown>
-      for (const [k, v] of Object.entries(batch)) {
-        const t = out[k]
-        if (typeof t !== 'string' || !t.trim()) throw new Error(`missing ${k}`)
-        if (placeholders(t) !== placeholders(v)) throw new Error(`placeholders changed in ${k}`)
-      }
-      return out as Record<string, string>
+      // keep every line that came back intact; the rest is retried in the next batch
+      const good = Object.fromEntries(
+        Object.entries(batch).flatMap(([k, v]) => {
+          const t = out[k]
+          return typeof t === 'string' && t.trim() && placeholders(t) === placeholders(v) && !wrongLanguage(t, lang) ? [[k, t]] : []
+        }),
+      ) as Record<string, string>
+      if (!Object.keys(good).length) throw new Error('nothing usable in the reply (wrong language or missing lines)')
+      return good
     } catch (e) {
       console.warn(`retry ${lang} (${model}): ${(e as Error).message.slice(0, 120)}`)
     }
@@ -56,9 +64,10 @@ const only = process.argv[2] as keyof typeof LANGS | undefined
 for (const lang of (only ? [only] : Object.keys(LANGS)) as (keyof typeof LANGS)[]) {
   const file = new URL(`../src/data/texts.${lang}.json`, import.meta.url)
   const out: Record<string, string> = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
-  const todo = Object.keys(TEXTS_EN).filter((k) => !out[k])
-  for (let i = 0; i < todo.length; i += BATCH) {
-    const batch = Object.fromEntries(todo.slice(i, i + BATCH).map((k) => [k, TEXTS_EN[k]!]))
+  for (;;) {
+    const todo = Object.keys(TEXTS_EN).filter((k) => !out[k])
+    if (!todo.length) break
+    const batch = Object.fromEntries(todo.slice(0, BATCH).map((k) => [k, TEXTS_EN[k]!]))
     Object.assign(out, await translateBatch(lang, batch))
     // keep the English key order so diffs stay readable
     const ordered = Object.fromEntries(Object.keys(TEXTS_EN).filter((k) => out[k]).map((k) => [k, out[k]]))
