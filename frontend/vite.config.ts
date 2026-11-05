@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -16,102 +16,112 @@ const securityHeaders = JSON.parse(
 // NetworkOnly rule below makes that explicit.
 const CACHEABLE_GET = /\/(brief|weather|mandi\/prices|farmer\/me)(\?|$)/
 
-export default defineConfig({
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  plugins: [
-    react(),
-    tailwindcss(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {
-        name: 'Arth — अर्थ',
-        short_name: 'Arth',
-        description: 'आजचं शेतीचं काम, बाजारभाव आणि सल्ला — तुमच्या भाषेत.',
-        lang: 'mr',
-        start_url: '/',
-        scope: '/',
-        display: 'standalone',
-        orientation: 'portrait',
-        background_color: '#DCD7C9',
-        theme_color: '#2E6B3F',
-        icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg}'],
-        // fonts are cached the first time a screen asks for them (below)
-        globIgnores: ['**/fonts/**', 'mockServiceWorker.js'],
-        navigateFallbackDenylist: [/^\/__/, /^\/ai\//],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => /\/ai\//.test(url.pathname),
-            handler: 'NetworkOnly',
-          },
-          {
-            urlPattern: ({ url, request }) =>
-              request.method === 'GET' && CACHEABLE_GET.test(url.pathname + url.search),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'arth-api',
-              networkTimeoutSeconds: 6,
-              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 3 },
-              cacheableResponse: { statuses: [200] },
+export default defineConfig(({ mode }) => {
+  // `npm run build:android` (mode "android"): the native app has no service worker
+  // (Capacitor serves the files from the APK) and no /api proxy, so the API base
+  // must be an absolute URL from .env.android.local.
+  const android = mode === 'android'
+  if (android && !/^https?:\/\//.test(loadEnv(mode, process.cwd(), 'VITE_').VITE_API_BASE_URL ?? '')) {
+    throw new Error('build:android needs an absolute VITE_API_BASE_URL in .env.android.local (see .env.android.example)')
+  }
+  return {
+    resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+    plugins: [
+      react(),
+      tailwindcss(),
+      VitePWA({
+        disable: android,
+        registerType: 'autoUpdate',
+        manifest: {
+          name: 'Arth — अर्थ',
+          short_name: 'Arth',
+          description: 'आजचं शेतीचं काम, बाजारभाव आणि सल्ला — तुमच्या भाषेत.',
+          lang: 'mr',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          orientation: 'portrait',
+          background_color: '#DCD7C9',
+          theme_color: '#2E6B3F',
+          icons: [
+            { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+            { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,png,svg}'],
+          // fonts are cached the first time a screen asks for them (below)
+          globIgnores: ['**/fonts/**', 'mockServiceWorker.js'],
+          navigateFallbackDenylist: [/^\/__/, /^\/ai\//],
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => /\/ai\//.test(url.pathname),
+              handler: 'NetworkOnly',
             },
-          },
-          // live public data the mock resolver reads (src/lib/live keeps its own
-          // localStorage copy too); short expiry so prices and forecasts stay current
-          {
-            urlPattern: ({ url }) => url.origin === 'https://api.open-meteo.com',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'arth-live-weather',
-              networkTimeoutSeconds: 6,
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 3 },
-              cacheableResponse: { statuses: [200] },
+            {
+              urlPattern: ({ url, request }) =>
+                request.method === 'GET' && CACHEABLE_GET.test(url.pathname + url.search),
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'arth-api',
+                networkTimeoutSeconds: 6,
+                expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 3 },
+                cacheableResponse: { statuses: [200] },
+              },
             },
-          },
-          {
-            urlPattern: ({ url }) => url.origin === 'https://api.data.gov.in',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'arth-live-mandi',
-              networkTimeoutSeconds: 6,
-              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 12 },
-              cacheableResponse: { statuses: [200] },
+            // live public data the mock resolver reads (src/lib/live keeps its own
+            // localStorage copy too); short expiry so prices and forecasts stay current
+            {
+              urlPattern: ({ url }) => url.origin === 'https://api.open-meteo.com',
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'arth-live-weather',
+                networkTimeoutSeconds: 6,
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 3 },
+                cacheableResponse: { statuses: [200] },
+              },
             },
-          },
-          {
-            urlPattern: /\/fonts\/.*\.woff2$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'arth-fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
+            {
+              urlPattern: ({ url }) => url.origin === 'https://api.data.gov.in',
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'arth-live-mandi',
+                networkTimeoutSeconds: 6,
+                expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 12 },
+                cacheableResponse: { statuses: [200] },
+              },
             },
+            {
+              urlPattern: /\/fonts\/.*\.woff2$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'arth-fonts',
+                expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+          ],
+        },
+      }),
+    ],
+    // `npm run dev`: /api goes to the local backend, so the browser sees one origin
+    // (no CORS, and the same relative API path as production behind one domain).
+    server: {
+      host: true,
+      port: 5173,
+      proxy: { '/api': { target: process.env.ARTH_API_PROXY ?? 'http://127.0.0.1:8000', changeOrigin: false } },
+    },
+    preview: { headers: securityHeaders },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'charts'
           },
-        ],
-      },
-    }),
-  ],
-  // `npm run dev`: /api goes to the local backend, so the browser sees one origin
-  // (no CORS, and the same relative API path as production behind one domain).
-  server: {
-    host: true,
-    port: 5173,
-    proxy: { '/api': { target: process.env.ARTH_API_PROXY ?? 'http://127.0.0.1:8000', changeOrigin: false } },
-  },
-  preview: { headers: securityHeaders },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'charts'
         },
       },
     },
-  },
+  }
 })

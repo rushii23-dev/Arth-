@@ -51,6 +51,13 @@ Start the backend first (see [`../backend/README.md`](../backend/README.md)). Se
 | `VITE_API_BASE_URL` | API base; empty = `/api` (proxied in dev) |
 | `VITE_FIREBASE_API_KEY` `VITE_FIREBASE_AUTH_DOMAIN` `VITE_FIREBASE_PROJECT_ID` `VITE_FIREBASE_APP_ID` | Google sign-in (public by design). Required |
 
+### Android app
+
+The same build also ships as a native Android app (Capacitor, `android/`):
+`npm run build:android` builds in mode `android` (no service worker, absolute
+`VITE_API_BASE_URL` from `.env.android.local`) and syncs it into the Android project.
+Firebase setup, building the APK and installing it: [`../docs/ANDROID.md`](../docs/ANDROID.md).
+
 ## Check
 
 ```bash

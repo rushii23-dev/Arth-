@@ -4,7 +4,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import { api, setUnauthorizedHandler } from '@/lib/api/client'
 import { env } from '@/lib/env'
-import { firebaseReady, getFirebaseAuth } from '@/lib/firebase'
+import { firebaseReady, getFirebaseAuth, signInWithGoogleNative, signOutNative } from '@/lib/firebase'
+import { isNativeApp } from '@/lib/platform'
 import { registerTokenGetter } from '@/lib/session'
 import { LANG_KEY } from '@/i18n'
 
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const [auth, { signOut: fbSignOut }] = await Promise.all([getFirebaseAuth(), import('firebase/auth')])
         await fbSignOut(auth)
+        if (isNativeApp) await signOutNative()
       } catch {
         /* still clear everything below */
       }
@@ -100,6 +102,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [signOut])
 
   const signInWithGoogle = useCallback(async () => {
+    if (env.firebase && isNativeApp) {
+      // Android app: popups do not work in the WebView; use the system account sheet.
+      qc.clear()
+      try {
+        await signInWithGoogleNative() // onIdTokenChanged sets status
+      } catch (err) {
+        if (import.meta.env.DEV) console.warn('Google sign-in failed:', (err as { code?: string }).code ?? err)
+        throw err
+      }
+      return
+    }
     if (env.firebase) {
       // Normally loaded at app start, so nothing is awaited before the popup opens and
       // the browser still counts it as part of the click. Only on a very slow first load

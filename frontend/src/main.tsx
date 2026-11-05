@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/api/queries'
 import { router } from '@/app/router'
+import { isNativeApp } from '@/lib/platform'
 import '@/i18n'
 import './index.css'
 
@@ -65,6 +66,12 @@ function start() {
       </Crash>
     </StrictMode>,
   )
+}
+
+// The Android app ships its files in the APK and is built without the PWA plugin
+// (vite --mode android). If a web build was ever synced into it, drop that worker.
+if (isNativeApp && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => void r.unregister()))
 }
 
 start()
