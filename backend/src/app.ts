@@ -6,16 +6,21 @@ import { HTTPException } from 'hono/http-exception'
 import { requireAuth, type AuthVars, type TokenVerifier } from './auth.js'
 import type { Config } from './config.js'
 import { ApiError, errorBody } from './errors.js'
+import type { Clock } from './lib/time.js'
 import { farmerRoutes } from './routes/farmer.js'
+import { weatherRoutes } from './routes/weather.js'
+import type { ForecastSource } from './services/weather.js'
 import type { Store } from './store/types.js'
 
 export interface Deps {
   config: Config
   store: Store
   verifyToken: TokenVerifier
+  forecast: ForecastSource
+  clock?: Clock
 }
 
-export function createApp({ config, store, verifyToken }: Deps) {
+export function createApp({ config, store, verifyToken, forecast, clock = () => new Date() }: Deps) {
   const api = new Hono<{ Variables: AuthVars }>()
 
   api.get('/health', (c) =>
@@ -24,6 +29,7 @@ export function createApp({ config, store, verifyToken }: Deps) {
 
   api.use('*', requireAuth(verifyToken))
   api.route('/farmer', farmerRoutes(store))
+  api.route('/', weatherRoutes({ store, forecast, clock }))
 
   const app = new Hono()
   app.use('*', secureHeaders({ xFrameOptions: 'DENY', referrerPolicy: 'strict-origin-when-cross-origin' }))

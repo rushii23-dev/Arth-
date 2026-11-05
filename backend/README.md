@@ -25,6 +25,8 @@ npm test
 | `src/schemas.ts` | zod schemas mirroring `frontend/src/lib/api/types.ts` |
 | `src/store/` | `Store` interface with memory and Firestore versions |
 | `src/routes/` | One file per API area |
+| `src/services/` | Weather, seasons, brief logic |
+| `src/lib/` | IST dates and the en/hi/mr messages |
 
 ## Status
 
@@ -32,4 +34,6 @@ npm test
 |---|---|
 | `GET /health` | done |
 | `GET/PUT/DELETE /farmer/me` | done (soil type defaults to black until `/soil` lands) |
-| `/weather`, `/brief`, `/mandi/*`, `/ai/*`, `/calendar`, `/soil`, `/schemes/*` | to build |
+| `GET /weather` | done: Open-Meteo (no key), 30-min cache, rain/wind/heat/heavy-rain advisories in en/hi/mr |
+| `GET /brief` | done: weather actions, sowing nudge, season progress; price alerts and crop stages come with mandi and calendar |
+| `/mandi/*`, `/ai/*`, `/calendar`, `/soil`, `/schemes/*` | to build |
