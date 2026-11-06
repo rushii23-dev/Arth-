@@ -28,7 +28,9 @@ export function ErrorState({ error, onRetry, title }: { error?: unknown; onRetry
   const { t } = useTranslation('common')
   const timeout = error instanceof ApiError && error.code === 'timeout'
   const offline = error instanceof ApiError && error.code === 'network'
-  const body = timeout ? t('error.timeout') : offline ? t('error.offline') : t('error.body')
+  // a data source behind the backend (mandi prices, weather, the AI) is down or rate-limited
+  const upstream = error instanceof ApiError && /_(unavailable|rate_limited)$/.test(error.code)
+  const body = timeout ? t('error.timeout') : offline ? t('error.offline') : upstream ? t('error.upstream') : t('error.body')
   return (
     <div role="alert" className="rounded-[26px] bg-card px-5 py-6 text-center">
       <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-warn-l text-warn">

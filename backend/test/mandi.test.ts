@@ -6,6 +6,7 @@ import { analyse, cachedMandi, changePct, dataGovIn, slopePerDay, type PriceReco
 import { sellAdvice } from '../src/services/sell.js'
 import type { Forecast } from '../src/services/weather.js'
 import { memoryStore } from '../src/store/memory.js'
+import { ApiError } from '../src/errors.js'
 
 const NIPHAD = { lat: 20.08, lon: 74.11 }
 const ASOF = '2026-11-04'
@@ -124,6 +125,39 @@ describe('data.gov.in client', () => {
     fail = true
     expect(await m('onion')).toBe(records)
     expect(source).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows prices when only one of the two feeds answers', async () => {
+    const fetchFn = async (url: string) =>
+      url.includes('9ef84268') ? Response.json({ records: [todayRow] }) : new Response('{"error":"Rate limit exceeded"}', { status: 429 })
+    const out = await dataGovIn('k', fetchFn as unknown as typeof fetch)('onion')
+    expect(out.map((r) => r.market)).toEqual(['Rahuri'])
+  })
+
+  it('serves the saved snapshot after a restart while the API is down, and waits before retrying', async () => {
+    const store = memoryStore()
+    const up = cachedMandi(async () => records, 1000, () => 0, store)
+    await up('onion')
+    await vi.waitFor(async () => expect(await store.getMandiSnapshot('onion')).not.toBeNull())
+    const saved = (await store.getMandiSnapshot('onion'))!.records
+    expect(saved.length).toBeGreaterThan(0)
+
+    let t = 0
+    const down = vi.fn(async () => {
+      throw new ApiError(503, 'mandi_rate_limited', 'busy')
+    })
+    const restarted = cachedMandi(down, 1000, () => t, store)
+    expect(await restarted('onion')).toEqual(saved)
+    expect(await restarted('onion')).toEqual(saved)
+    expect(down).toHaveBeenCalledTimes(1)
+    t = 61_000
+    await restarted('onion')
+    expect(down).toHaveBeenCalledTimes(2)
+  })
+
+  it('still reports the error when there is nothing saved', async () => {
+    const m = cachedMandi(async () => { throw new ApiError(503, 'mandi_rate_limited', 'busy') }, 1000, () => 0, memoryStore())
+    await expect(m('onion')).rejects.toMatchObject({ code: 'mandi_rate_limited' })
   })
 })
 

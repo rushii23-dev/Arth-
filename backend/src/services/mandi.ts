@@ -83,14 +83,21 @@ export function dataGovIn(apiKey: string, fetchFn: typeof fetch = fetch): MandiS
     if (!apiKey) throw new ApiError(503, 'mandi_not_configured', 'Mandi prices are not set up on this server')
 
     const historyFilter = { 'filters[State]': 'Maharashtra', 'filters[Commodity]': name }
-    const [today, head] = await Promise.all([
+    const history = async () => {
+      const head = await call(HISTORY_RESOURCE, { ...historyFilter, limit: 1 })
+      const total = head.total ?? 0
+      return total > 0
+        ? await call(HISTORY_RESOURCE, { ...historyFilter, limit: HISTORY_TAIL, offset: Math.max(0, total - HISTORY_TAIL) })
+        : { records: [] }
+    }
+    // the two feeds fail independently: one answering is enough to show prices
+    const [todayRes, tailRes] = await Promise.allSettled([
       call(TODAY_RESOURCE, { 'filters[state.keyword]': 'Maharashtra', 'filters[commodity]': name, limit: 1000 }),
-      call(HISTORY_RESOURCE, { ...historyFilter, limit: 1 }),
+      history(),
     ])
-    const total = head.total ?? 0
-    const tail = total > 0
-      ? await call(HISTORY_RESOURCE, { ...historyFilter, limit: HISTORY_TAIL, offset: Math.max(0, total - HISTORY_TAIL) })
-      : { records: [] }
+    if (todayRes.status === 'rejected' && tailRes.status === 'rejected') throw todayRes.reason
+    const today = todayRes.status === 'fulfilled' ? todayRes.value : { records: [] }
+    const tail = tailRes.status === 'fulfilled' ? tailRes.value : { records: [] }
 
     // today's feed wins over history for the same market and day
     const byKey = new Map<string, PriceRecord>()
@@ -102,25 +109,72 @@ export function dataGovIn(apiKey: string, fetchFn: typeof fetch = fetch): MandiS
   }
 }
 
+/** Where the last good prices per commodity are kept across restarts (Firestore, or a local file). */
+export interface MandiSnapshots {
+  getMandiSnapshot(commodity: string): Promise<{ savedAt: string; records: PriceRecord[] } | null>
+  putMandiSnapshot(commodity: string, snapshot: { savedAt: string; records: PriceRecord[] }): Promise<void>
+}
+
+/** Snapshots keep only what `analyse` reads: the latest price per market and a 30-day trend. */
+const SNAPSHOT_DAYS = 45
+/** After a failed refresh, wait this long before asking the rate-limited API again. */
+const RETRY_AFTER_MS = 60_000
+
+function recent(records: PriceRecord[]): PriceRecord[] {
+  const newest = records.reduce((m, r) => (r.date > m ? r.date : m), '')
+  if (!newest) return records
+  const since = addDays(newest, -SNAPSHOT_DAYS)
+  return records.filter((r) => r.date >= since)
+}
+
 /**
  * The price API is rate-limited, and prices change once a day: cache per commodity,
  * share in-flight requests, and keep serving the last good answer if a refresh fails.
+ * With `snapshots`, the last good answer also survives restarts and new Cloud Run instances.
  */
-export function cachedMandi(source: MandiSource, ttlMs = 3 * 60 * 60_000, now = Date.now): MandiSource {
+export function cachedMandi(
+  source: MandiSource,
+  ttlMs = 3 * 60 * 60_000,
+  now = Date.now,
+  snapshots?: MandiSnapshots,
+  log: (msg: string, extra: Record<string, unknown>) => void = () => {},
+): MandiSource {
   const fresh = new Map<string, { at: number; value: Promise<PriceRecord[]> }>()
   const lastGood = new Map<string, PriceRecord[]>()
+
+  async function fromSnapshot(commodity: string) {
+    if (!snapshots) return null
+    try {
+      const snap = await snapshots.getMandiSnapshot(commodity)
+      return snap?.records.length ? snap.records : null
+    } catch (err) {
+      log('mandi snapshot read failed', { commodity, error: String(err) })
+      return null
+    }
+  }
+
   return (commodity) => {
     const hit = fresh.get(commodity)
     if (hit && now() - hit.at < ttlMs) return hit.value
     const value = source(commodity).then(
       (records) => {
         lastGood.set(commodity, records)
+        if (snapshots && records.length) {
+          snapshots
+            .putMandiSnapshot(commodity, { savedAt: new Date(now()).toISOString(), records: recent(records) })
+            .catch((err) => log('mandi snapshot write failed', { commodity, error: String(err) }))
+        }
         return records
       },
-      (err) => {
-        fresh.delete(commodity)
-        const stale = lastGood.get(commodity)
-        if (stale) return stale
+      async (err) => {
+        log('mandi refresh failed', { commodity, error: String(err) })
+        // don't hit the API again on every request while it is failing
+        fresh.set(commodity, { at: now() - ttlMs + RETRY_AFTER_MS, value })
+        const stale = lastGood.get(commodity) ?? (await fromSnapshot(commodity))
+        if (stale) {
+          lastGood.set(commodity, stale)
+          return stale
+        }
         throw err
       },
     )

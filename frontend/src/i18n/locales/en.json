@@ -17,7 +17,8 @@
       "title": "Couldn't load this",
       "body": "Something went wrong on our side. Please try again.",
       "timeout": "This is taking too long — the network may be slow. Try again.",
-      "offline": "No internet right now. Showing what we have saved."
+      "offline": "No internet right now. Showing what we have saved.",
+      "upstream": "The service we get this data from isn't answering right now. Please try again in a few minutes."
     },
     "escalate": {
       "title": "Talk to an expert",

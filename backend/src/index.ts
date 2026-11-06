@@ -13,13 +13,15 @@ const config = loadConfig()
 // On Cloud Run the service account supplies credentials; locally, token checks need only the project ID.
 initializeApp({ projectId: config.firebaseProjectId })
 
-const store = config.store === 'firestore' ? firestoreStore() : memoryStore()
+const store = config.store === 'firestore' ? firestoreStore() : memoryStore({ snapshotDir: '.data' })
+const warn = (msg: string, extra: Record<string, unknown>) =>
+  console.log(JSON.stringify({ severity: 'WARNING', msg, ...extra }))
 const app = createApp({
   config,
   store,
   verifyToken: firebaseVerifier(),
   forecast: cached(openMeteo()),
-  mandi: cachedMandi(dataGovIn(config.dataGovInApiKey)),
+  mandi: cachedMandi(dataGovIn(config.dataGovInApiKey), undefined, undefined, store, warn),
   llm: gemini(config.geminiApiKey),
 })
 
