@@ -3,6 +3,7 @@ import type { FarmerProfile } from '@/lib/api/types'
 import { toInput, useSaveFarmer } from '@/lib/api/queries'
 import { LanguageSwitcher } from '@/components/ui'
 import { setReadAloud, useReadAloudPref } from '@/components/voice'
+import { isKnownCrop } from '@/lib/crops'
 import { useAlertPrefs } from './profileData'
 import { IconBubble, PIcon, RowGroup, ToggleRow } from './parts'
 
@@ -13,7 +14,8 @@ export function SettingsSection({ f }: { f: FarmerProfile }) {
   const save = useSaveFarmer()
   const { prefs, toggle } = useAlertPrefs()
   const readAloud = useReadAloudPref()
-  const crops = f.crops.map((c) => tc(`crops.${c}`, { defaultValue: c })).join(', ')
+  // only catalog crops get price alerts; one the farmer typed in has no mandi data
+  const crops = f.crops.filter(isKnownCrop).map((c) => tc(`crops.${c}`)).join(', ')
 
   return (
     <div className="space-y-3">

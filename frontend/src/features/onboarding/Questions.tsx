@@ -5,8 +5,9 @@ import { Icon } from '@/components/ui'
 import { api } from '@/lib/api/client'
 import { qk, round2 } from '@/lib/api/queries'
 import { LANGS, useLang } from '@/i18n'
-import { CROPS, DISTRICTS, WATER, districtLabel, nearestDistrict, toggle, type Draft, type QuestionDef } from './model'
-import { FIELD, Label, OptionRow, OptionTile, QuestionHead } from './parts'
+import { DISTRICTS, WATER, districtLabel, nearestDistrict, toggle, type Draft, type QuestionDef } from './model'
+import { CropPicker } from './CropPicker'
+import { FIELD, Label, OptionRow, QuestionHead } from './parts'
 /** The body of one question screen. `pick` answers and moves on; `set` only answers. */
 export interface QuestionProps {
   q: QuestionDef
@@ -64,11 +65,7 @@ export function QuestionBody(props: QuestionProps) {
         <>
           {head}
           <MultiHint />
-          <div role="group" aria-label={t(`q.${q.id}.title`)} className="mt-3 grid grid-cols-2 gap-2.5">
-            {CROPS.map((c) => (
-              <OptionTile key={c.value} glyph={c.glyph} label={tc(`crops.${c.value}`)} on={draft.crops.includes(c.value)} onClick={() => set({ crops: toggle(draft.crops, c.value) })} />
-            ))}
-          </div>
+          <CropPicker crops={draft.crops} onChange={(crops) => set({ crops })} label={t(`q.${q.id}.title`)} />
         </>
       )
 

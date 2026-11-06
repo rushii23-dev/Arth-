@@ -1,4 +1,4 @@
-import { CROPS, cropName } from '../data/crops.js'
+import { cropName, isCrop } from '../data/crops.js'
 import { rupees, sentenceCase, t } from '../lib/i18n.js'
 import { daysBetween, istDate, type Clock, type LangCode } from '../lib/time.js'
 import type { FarmerProfile } from '../schemas.js'
@@ -44,7 +44,7 @@ const SELL_NUDGE_PCT = 5
 
 /** Prices for the farmer's own crops at the nearest busy market. A failed crop is skipped, never fatal. */
 async function priceAlerts(profile: FarmerProfile, mandi: MandiSource, log: ToolCallLog[]): Promise<PriceAlert[]> {
-  const crops = profile.crops.filter((c) => c in CROPS).slice(0, MAX_PRICE_ALERTS)
+  const crops = profile.crops.filter(isCrop).slice(0, MAX_PRICE_ALERTS)
   const alerts = await Promise.all(
     crops.map(async (commodity): Promise<PriceAlert | null> => {
       try {

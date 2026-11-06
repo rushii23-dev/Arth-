@@ -1,4 +1,4 @@
-import { CROPS } from '../data/crops.js'
+import { CROPS, isCrop } from '../data/crops.js'
 import { canonicalDistrict, DISTRICTS, haversineKm, ROAD_FACTOR } from '../data/districts.js'
 import { ApiError } from '../errors.js'
 import { addDays, daysBetween } from '../lib/time.js'
@@ -78,7 +78,7 @@ export function dataGovIn(apiKey: string, fetchFn: typeof fetch = fetch): MandiS
   }
 
   return async (commodity) => {
-    const name = CROPS[commodity]?.agmarknet
+    const name = isCrop(commodity) ? CROPS[commodity]!.agmarknet : undefined
     if (!name) throw new ApiError(404, 'unknown_commodity', `No mandi prices for ${commodity}`)
     if (!apiKey) throw new ApiError(503, 'mandi_not_configured', 'Mandi prices are not set up on this server')
 

@@ -33,7 +33,7 @@ export function Review({ draft, onJump, editing }: { draft: Draft; onJump: (id: 
       case 'where':
         return answered ? { text: `${draft.village.trim()}, ${districtLabel(draft.district, lang)}` } : { text: t('review.needed'), tone: 'needed' }
       case 'crops':
-        return answered ? { text: draft.crops.map((c) => tc(`crops.${c}`)).join(', '), glyph: glyphFor(CROPS, draft.crops[0]) } : { text: t('review.needed'), tone: 'needed' }
+        return answered ? { text: draft.crops.map((c) => tc(`crops.${c}`, { defaultValue: c })).join(', '), glyph: glyphFor(CROPS, draft.crops[0]) ?? 'sprout' } : { text: t('review.needed'), tone: 'needed' }
       case 'land':
         return answered
           ? {

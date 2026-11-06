@@ -1,4 +1,4 @@
-import { CROPS, cropName } from '../data/crops.js'
+import { CROPS, cropName, isCrop } from '../data/crops.js'
 import { rupees, t } from '../lib/i18n.js'
 import type { LangCode } from '../lib/time.js'
 import { slopePerDay, type MandiView } from './mandi.js'
@@ -48,7 +48,7 @@ export function sellAdvice(
   const slope = slopePerDay(view.trend, 7)
   const lastPrice = view.trend.at(-1)?.modalPrice ?? best.modalPrice
   const threshold = lastPrice * TREND_SHARE_PER_DAY
-  const storable = CROPS[req.commodity]?.storable ?? false
+  const storable = isCrop(req.commodity) && CROPS[req.commodity]!.storable
   const rising = slope >= threshold
   const falling = slope <= -threshold
   const wait = rising && storable

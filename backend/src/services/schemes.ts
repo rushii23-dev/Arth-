@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { CROPS } from '../data/crops.js'
+import { isCrop } from '../data/crops.js'
 import { canonicalDistrict } from '../data/districts.js'
 import { tx } from '../lib/texts.js'
 import type { LangCode } from '../lib/time.js'
@@ -189,7 +189,7 @@ export function sharedRecord(
     recordId: randomUUID(),
     schemeId: req.schemeId,
     district: req.district ? (canonicalDistrict(req.district) ?? null) : null,
-    crop: req.crop && req.crop in CROPS ? req.crop : null,
+    crop: isCrop(req.crop) ? req.crop : null,
     landBand: landBand(req.landAcres),
     lang: req.lang,
     day,

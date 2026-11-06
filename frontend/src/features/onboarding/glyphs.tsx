@@ -162,6 +162,7 @@ const G = {
       <path d="M12 4.5v3M4.8 9.8l2 1.4M19.2 9.8l-2 1.4M7.5 21h9" />
     </>
   ),
+  plus: <path d="M12 5v14M5 12h14" />,
 } satisfies Record<string, ReactNode>
 
 export type GlyphName = keyof typeof G

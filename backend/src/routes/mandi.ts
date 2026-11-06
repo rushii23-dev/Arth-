@@ -1,14 +1,14 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { AuthVars } from '../auth.js'
-import { CROPS } from '../data/crops.js'
+import { isCrop } from '../data/crops.js'
 import { ApiError, badRequest } from '../errors.js'
 import { Lang, round2 } from '../schemas.js'
 import { analyse, type MandiSource } from '../services/mandi.js'
 import { sellAdvice } from '../services/sell.js'
 import { parseQuery } from './query.js'
 
-const Commodity = z.string().refine((c) => c in CROPS, { message: 'unknown commodity' })
+const Commodity = z.string().refine((c) => isCrop(c), { message: 'unknown commodity' })
 const Point = {
   lat: z.coerce.number().min(-90).max(90).transform(round2),
   lon: z.coerce.number().min(-180).max(180).transform(round2),

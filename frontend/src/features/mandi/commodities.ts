@@ -1,23 +1,22 @@
-/**
- * Crops the mandi service has live prices for: every crop onboarding offers
- * (backend services/mandi.py MSAMB_CODES covers all of them).
- */
-export const MANDI_COMMODITIES = [
-  'onion', 'soybean', 'tomato', 'grapes', 'cotton', 'wheat', 'gram', 'sugarcane', 'pomegranate', 'maize',
-] as const
-export type MandiCommodity = (typeof MANDI_COMMODITIES)[number]
+import { ALL_CROPS, CORE_CROPS, isKnownCrop, type CropId } from '@/lib/crops'
 
-export function isMandiCommodity(c: string | null | undefined): c is MandiCommodity {
-  return !!c && (MANDI_COMMODITIES as readonly string[]).includes(c)
-}
+/**
+ * Crops the mandi service has live prices for: every crop in the catalog, core and
+ * "Other crops" (backend data/crops.ts gives each its Agmarknet name). A crop the
+ * farmer typed in by hand has no prices.
+ */
+export const MANDI_COMMODITIES = ALL_CROPS
+export type MandiCommodity = CropId
+
+export const isMandiCommodity = (c: string | null | undefined): c is MandiCommodity => isKnownCrop(c)
 
 /**
  * Only the farmer's own crops, in profile order: prices for crops they don't grow
- * are noise. A profile with none of them (older profiles) still gets the full list.
+ * are noise. A profile with none of them still gets the core crops.
  */
 export function farmerCommodities(crops: readonly string[]): MandiCommodity[] {
   const own = [...new Set(crops.filter(isMandiCommodity))]
-  return own.length ? own : [...MANDI_COMMODITIES]
+  return own.length ? own : [...CORE_CROPS]
 }
 
 /** First profile crop that has price data, else onion (Nashik's main crop). */

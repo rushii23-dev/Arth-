@@ -7,7 +7,7 @@ import { extractJson, type JsonRequest, type Llm } from '../src/services/llm.js'
 import { redact } from '../src/services/pii.js'
 import { memoryStore } from '../src/store/memory.js'
 import { CONDITIONS } from '../src/data/conditions.js'
-import { CROPS } from '../src/data/crops.js'
+import { CROPS, isCoreCrop } from '../src/data/crops.js'
 import HI from '../src/data/conditions.hi.json' with { type: 'json' }
 import MR from '../src/data/conditions.mr.json' with { type: 'json' }
 
@@ -147,9 +147,9 @@ describe('crop doctor knowledge', () => {
   type Entry = { name: string; symptoms: string[]; organic: string[]; chemical: string[]; prevention: string[] }
   const langs = { hi: HI as Record<string, Entry>, mr: MR as Record<string, Entry> }
 
-  it('covers every crop with problems and a healthy entry, with unique ids', () => {
+  it('covers every core crop with problems and a healthy entry, with unique ids', () => {
     expect(new Set(CONDITIONS.map((c) => c.id)).size).toBe(CONDITIONS.length)
-    for (const crop of Object.keys(CROPS)) {
+    for (const crop of Object.keys(CROPS).filter(isCoreCrop)) {
       const own = CONDITIONS.filter((c) => c.crop === crop)
       expect(own.some((c) => c.kind === 'healthy'), crop).toBe(true)
       expect(own.length, crop).toBeGreaterThanOrEqual(3)

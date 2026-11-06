@@ -6,20 +6,90 @@ export interface CropInfo {
   name: Record<LangCode, string>
   /** Can be held a few weeks for a better price (dry grain, cured onion, lint). */
   storable: boolean
+  /**
+   * Core crops have Arth's full support: crop calendar, weather jobs and the crop doctor's
+   * checked advice. The rest get mandi prices, sell advice and schemes.
+   */
+  core: boolean
 }
 
-/** The crops onboarding offers (frontend MANDI_COMMODITIES). */
-export const CROPS: Record<string, CropInfo> = {
-  onion: { agmarknet: 'Onion', name: { en: 'Onion', hi: 'प्याज', mr: 'कांदा' }, storable: true },
-  soybean: { agmarknet: 'Soyabean', name: { en: 'Soybean', hi: 'सोयाबीन', mr: 'सोयाबीन' }, storable: true },
-  tomato: { agmarknet: 'Tomato', name: { en: 'Tomato', hi: 'टमाटर', mr: 'टोमॅटो' }, storable: false },
-  grapes: { agmarknet: 'Grapes', name: { en: 'Grapes', hi: 'अंगूर', mr: 'द्राक्षे' }, storable: false },
-  cotton: { agmarknet: 'Cotton', name: { en: 'Cotton', hi: 'कपास', mr: 'कापूस' }, storable: true },
-  wheat: { agmarknet: 'Wheat', name: { en: 'Wheat', hi: 'गेहूं', mr: 'गहू' }, storable: true },
-  gram: { agmarknet: 'Bengal Gram(Gram)(Whole)', name: { en: 'Gram', hi: 'चना', mr: 'हरभरा' }, storable: true },
-  sugarcane: { agmarknet: 'Sugarcane', name: { en: 'Sugarcane', hi: 'गन्ना', mr: 'ऊस' }, storable: false },
-  pomegranate: { agmarknet: 'Pomegranate', name: { en: 'Pomegranate', hi: 'अनार', mr: 'डाळिंब' }, storable: false },
-  maize: { agmarknet: 'Maize', name: { en: 'Maize', hi: 'मक्का', mr: 'मका' }, storable: true },
-}
+type Entry = [agmarknet: string, en: string, hi: string, mr: string, storable: boolean]
+const build = (core: boolean, list: Record<string, Entry>): Record<string, CropInfo> =>
+  Object.fromEntries(
+    Object.entries(list).map(([id, [agmarknet, en, hi, mr, storable]]) => [id, { agmarknet, name: { en, hi, mr }, storable, core }]),
+  )
 
-export const cropName = (id: string, lang: LangCode) => CROPS[id]?.name[lang] ?? id
+/** The onboarding tiles (frontend CORE_CROPS). */
+const CORE = build(true, {
+  onion: ['Onion', 'Onion', 'प्याज', 'कांदा', true],
+  soybean: ['Soyabean', 'Soybean', 'सोयाबीन', 'सोयाबीन', true],
+  tomato: ['Tomato', 'Tomato', 'टमाटर', 'टोमॅटो', false],
+  grapes: ['Grapes', 'Grapes', 'अंगूर', 'द्राक्षे', false],
+  cotton: ['Cotton', 'Cotton', 'कपास', 'कापूस', true],
+  wheat: ['Wheat', 'Wheat', 'गेहूं', 'गहू', true],
+  gram: ['Bengal Gram(Gram)(Whole)', 'Gram', 'चना', 'हरभरा', true],
+  sugarcane: ['Sugarcane', 'Sugarcane', 'गन्ना', 'ऊस', false],
+  pomegranate: ['Pomegranate', 'Pomegranate', 'अनार', 'डाळिंब', false],
+  maize: ['Maize', 'Maize', 'मक्का', 'मका', true],
+})
+
+/** "Other crops" in onboarding (frontend MORE_CROPS): the rest of what Maharashtra grows. */
+const MORE = build(false, {
+  // grains and pulses
+  jowar: ['Jowar(Sorghum)', 'Jowar', 'ज्वार', 'ज्वारी', true],
+  bajra: ['Bajra(Pearl Millet/Cumbu)', 'Bajra', 'बाजरा', 'बाजरी', true],
+  paddy: ['Paddy(Dhan)(Common)', 'Paddy (rice)', 'धान', 'भात (धान)', true],
+  ragi: ['Ragi (Finger Millet)', 'Ragi (nachni)', 'रागी', 'नाचणी', true],
+  tur: ['Arhar (Tur/Red Gram)(Whole)', 'Tur (arhar)', 'अरहर (तुअर)', 'तूर', true],
+  moong: ['Green Gram (Moong)(Whole)', 'Moong', 'मूंग', 'मूग', true],
+  urad: ['Black Gram (Urd Beans)(Whole)', 'Urad', 'उड़द', 'उडीद', true],
+  peas: ['Peas Wet', 'Green peas', 'हरी मटर', 'हिरवा वाटाणा', false],
+  // oilseeds
+  groundnut: ['Groundnut', 'Groundnut', 'मूंगफली', 'भुईमूग', true],
+  sunflower: ['Sunflower', 'Sunflower', 'सूरजमुखी', 'सूर्यफूल', true],
+  safflower: ['Safflower', 'Safflower', 'कुसुम', 'करडई', true],
+  sesame: ['Sesamum(Sesame,Gingelly,Til)', 'Sesame (til)', 'तिल', 'तीळ', true],
+  // fruit
+  banana: ['Banana', 'Banana', 'केला', 'केळी', false],
+  orange: ['Orange', 'Orange (santra)', 'संतरा', 'संत्रा', false],
+  mosambi: ['Mousambi(Sweet Lime)', 'Mosambi', 'मौसमी', 'मोसंबी', false],
+  mango: ['Mango', 'Mango', 'आम', 'आंबा', false],
+  papaya: ['Papaya', 'Papaya', 'पपीता', 'पपई', false],
+  guava: ['Guava', 'Guava', 'अमरूद', 'पेरू', false],
+  custard_apple: ['Custard Apple (Sharifa)', 'Custard apple', 'सीताफल', 'सीताफळ', false],
+  lemon: ['Lemon', 'Lemon', 'नींबू', 'लिंबू', false],
+  watermelon: ['Water Melon', 'Watermelon', 'तरबूज', 'टरबूज', false],
+  // vegetables
+  chilli: ['Green Chilli', 'Green chilli', 'हरी मिर्च', 'हिरवी मिरची', false],
+  capsicum: ['Capsicum', 'Capsicum', 'शिमला मिर्च', 'ढोबळी मिरची', false],
+  brinjal: ['Brinjal', 'Brinjal', 'बैंगन', 'वांगी', false],
+  okra: ['Bhindi(Ladies Finger)', 'Okra (bhindi)', 'भिंडी', 'भेंडी', false],
+  cabbage: ['Cabbage', 'Cabbage', 'पत्तागोभी', 'कोबी', false],
+  cauliflower: ['Cauliflower', 'Cauliflower', 'फूलगोभी', 'फुलकोबी', false],
+  potato: ['Potato', 'Potato', 'आलू', 'बटाटा', false],
+  carrot: ['Carrot', 'Carrot', 'गाजर', 'गाजर', false],
+  cucumber: ['Cucumbar(Kheera)', 'Cucumber', 'खीरा', 'काकडी', false],
+  bottle_gourd: ['Bottle gourd', 'Bottle gourd', 'लौकी', 'दुधी भोपळा', false],
+  bitter_gourd: ['Bitter gourd', 'Bitter gourd', 'करेला', 'कारले', false],
+  drumstick: ['Drumstick', 'Drumstick', 'सहजन', 'शेवगा', false],
+  coriander: ['Coriander(Leaves)', 'Coriander', 'धनिया', 'कोथिंबीर', false],
+  methi: ['Methi(Leaves)', 'Methi', 'मेथी', 'मेथी', false],
+  // spices
+  garlic: ['Garlic', 'Garlic', 'लहसुन', 'लसूण', true],
+  ginger: ['Ginger(Green)', 'Ginger', 'अदरक', 'आले', false],
+  turmeric: ['Turmeric', 'Turmeric', 'हल्दी', 'हळद', true],
+})
+
+/**
+ * Every crop Arth knows by id. A farmer's profile may also hold a crop typed in by
+ * hand that is in neither list: that one is kept as text and only named, never priced.
+ */
+export const CROPS: Record<string, CropInfo> = { ...CORE, ...MORE }
+
+export const cropName = (id: string, lang: LangCode) => (Object.hasOwn(CROPS, id) ? CROPS[id]!.name[lang] : id)
+
+/** A crop id from the catalog (an own key: never "constructor" and the like). */
+export const isCrop = (id: string | null | undefined): id is string => !!id && Object.hasOwn(CROPS, id)
+
+/** A core crop: calendar, weather jobs and crop doctor advice exist for it. */
+export const isCoreCrop = (id: string | null | undefined): id is string => isCrop(id) && CROPS[id]!.core
