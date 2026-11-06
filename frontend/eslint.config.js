@@ -4,7 +4,8 @@ import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
 
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist', 'public/mockServiceWorker.js'] },
+  // android/: the native project and its build output (Capacitor copies dist/ in there)
+  { ignores: ['dist', 'dev-dist', 'public/mockServiceWorker.js', 'android'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
