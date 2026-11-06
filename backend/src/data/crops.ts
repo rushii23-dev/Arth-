@@ -1,7 +1,7 @@
 import type { LangCode } from '../lib/time.js'
 
 export interface CropInfo {
-  /** Commodity name as Agmarknet (data.gov.in) spells it. */
+  /** Commodity name as Agmarknet 2.0 (data.gov.in) spells it; the pre-2.0 names stopped getting new prices in 2023-25. */
   agmarknet: string
   name: Record<LangCode, string>
   /** Can be held a few weeks for a better price (dry grain, cured onion, lint). */
@@ -38,30 +38,30 @@ const MORE = build(false, {
   // grains and pulses
   jowar: ['Jowar(Sorghum)', 'Jowar', 'ज्वार', 'ज्वारी', true],
   bajra: ['Bajra(Pearl Millet/Cumbu)', 'Bajra', 'बाजरा', 'बाजरी', true],
-  paddy: ['Paddy(Dhan)(Common)', 'Paddy (rice)', 'धान', 'भात (धान)', true],
-  ragi: ['Ragi (Finger Millet)', 'Ragi (nachni)', 'रागी', 'नाचणी', true],
-  tur: ['Arhar (Tur/Red Gram)(Whole)', 'Tur (arhar)', 'अरहर (तुअर)', 'तूर', true],
-  moong: ['Green Gram (Moong)(Whole)', 'Moong', 'मूंग', 'मूग', true],
-  urad: ['Black Gram (Urd Beans)(Whole)', 'Urad', 'उड़द', 'उडीद', true],
+  paddy: ['Paddy(Common)', 'Paddy (rice)', 'धान', 'भात (धान)', true],
+  ragi: ['Ragi(Finger Millet)', 'Ragi (nachni)', 'रागी', 'नाचणी', true],
+  tur: ['Red gram/Arhar/Tur(whole)', 'Tur (arhar)', 'अरहर (तुअर)', 'तूर', true],
+  moong: ['Green Gram(Moong)(Whole)', 'Moong', 'मूंग', 'मूग', true],
+  urad: ['Black Gram(Urd Beans)(Whole)', 'Urad', 'उड़द', 'उडीद', true],
   peas: ['Peas Wet', 'Green peas', 'हरी मटर', 'हिरवा वाटाणा', false],
   // oilseeds
   groundnut: ['Groundnut', 'Groundnut', 'मूंगफली', 'भुईमूग', true],
-  sunflower: ['Sunflower', 'Sunflower', 'सूरजमुखी', 'सूर्यफूल', true],
+  sunflower: ['Sunflower/Sunflower Seed', 'Sunflower', 'सूरजमुखी', 'सूर्यफूल', true],
   safflower: ['Safflower', 'Safflower', 'कुसुम', 'करडई', true],
   sesame: ['Sesamum(Sesame,Gingelly,Til)', 'Sesame (til)', 'तिल', 'तीळ', true],
   // fruit
   banana: ['Banana', 'Banana', 'केला', 'केळी', false],
   orange: ['Orange', 'Orange (santra)', 'संतरा', 'संत्रा', false],
   mosambi: ['Mousambi(Sweet Lime)', 'Mosambi', 'मौसमी', 'मोसंबी', false],
-  mango: ['Mango', 'Mango', 'आम', 'आंबा', false],
+  mango: ['Mango(Raw-Ripe)', 'Mango', 'आम', 'आंबा', false],
   papaya: ['Papaya', 'Papaya', 'पपीता', 'पपई', false],
   guava: ['Guava', 'Guava', 'अमरूद', 'पेरू', false],
-  custard_apple: ['Custard Apple (Sharifa)', 'Custard apple', 'सीताफल', 'सीताफळ', false],
-  lemon: ['Lemon', 'Lemon', 'नींबू', 'लिंबू', false],
+  custard_apple: ['Seetapal', 'Custard apple', 'सीताफल', 'सीताफळ', false],
+  lemon: ['Lime', 'Lemon', 'नींबू', 'लिंबू', false],
   watermelon: ['Water Melon', 'Watermelon', 'तरबूज', 'टरबूज', false],
   // vegetables
   chilli: ['Green Chilli', 'Green chilli', 'हरी मिर्च', 'हिरवी मिरची', false],
-  capsicum: ['Capsicum', 'Capsicum', 'शिमला मिर्च', 'ढोबळी मिरची', false],
+  capsicum: ['Chilly Capsicum', 'Capsicum', 'शिमला मिर्च', 'ढोबळी मिरची', false],
   brinjal: ['Brinjal', 'Brinjal', 'बैंगन', 'वांगी', false],
   okra: ['Bhindi(Ladies Finger)', 'Okra (bhindi)', 'भिंडी', 'भेंडी', false],
   cabbage: ['Cabbage', 'Cabbage', 'पत्तागोभी', 'कोबी', false],

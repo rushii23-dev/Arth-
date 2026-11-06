@@ -21,6 +21,14 @@ describe('crop catalog', () => {
     expect(new Set(Object.values(CROPS).map((c) => c.agmarknet)).size).toBe(Object.keys(CROPS).length)
   })
 
+  it('uses the Agmarknet 2.0 commodity names, not the retired ones that no longer get prices', () => {
+    const retired = [
+      'Paddy(Dhan)(Common)', 'Ragi (Finger Millet)', 'Arhar (Tur/Red Gram)(Whole)', 'Green Gram (Moong)(Whole)',
+      'Black Gram (Urd Beans)(Whole)', 'Sunflower', 'Mango', 'Custard Apple (Sharifa)', 'Lemon', 'Capsicum',
+    ]
+    for (const [id, c] of Object.entries(CROPS)) expect(retired, id).not.toContain(c.agmarknet)
+  })
+
   it('has checked crop doctor advice for every core crop and only for core crops', () => {
     const covered = new Set(CONDITIONS.map((c) => c.crop))
     expect([...covered].sort()).toEqual(Object.keys(CROPS).filter(isCoreCrop).sort())
