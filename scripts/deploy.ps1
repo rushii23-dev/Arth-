@@ -23,7 +23,8 @@ $service = 'arth-api'
 $sa = "$service@$Project.iam.gserviceaccount.com"
 
 function Step($msg) { Write-Host "`n== $msg" -ForegroundColor Cyan }
-function Gcloud { & gcloud @args --project $Project --quiet; if ($LASTEXITCODE) { throw "gcloud $($args[0..2] -join ' ') failed" } }
+# Not named "Gcloud": PowerShell names ignore case, so it would call itself instead of gcloud.
+function Invoke-Gcloud { & gcloud @args --project $Project --quiet; if ($LASTEXITCODE) { throw "gcloud $($args[0..2] -join ' ') failed" } }
 
 # Reads KEY=value from backend\.env without echoing it.
 function EnvValue($name) {
@@ -36,26 +37,26 @@ function EnvValue($name) {
 function PutSecret($secret, $value) {
   if (-not $value) { throw "No value for $secret in backend\.env" }
   & gcloud secrets describe $secret --project $Project *> $null
-  if ($LASTEXITCODE) { Gcloud secrets create $secret --replication-policy=automatic }
+  if ($LASTEXITCODE) { Invoke-Gcloud secrets create $secret --replication-policy=automatic }
   $current = & gcloud secrets versions access latest --secret $secret --project $Project 2> $null
   if ($current -ne $value) {
     $tmp = New-TemporaryFile
     try {
       [IO.File]::WriteAllText($tmp, $value)   # no trailing newline
-      Gcloud secrets versions add $secret --data-file $tmp
+      Invoke-Gcloud secrets versions add $secret --data-file $tmp
     } finally { Remove-Item $tmp -Force }
   }
-  Gcloud secrets add-iam-policy-binding $secret --member "serviceAccount:$sa" --role roles/secretmanager.secretAccessor | Out-Null
+  Invoke-Gcloud secrets add-iam-policy-binding $secret --member "serviceAccount:$sa" --role roles/secretmanager.secretAccessor | Out-Null
 }
 
 if ($Only -in 'all', 'api') {
   Step 'Enabling Cloud Run, Cloud Build, Artifact Registry, Secret Manager, Firestore'
-  Gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com firestore.googleapis.com
+  Invoke-Gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com firestore.googleapis.com
 
   Step "Service account $sa (Firestore access only)"
   & gcloud iam service-accounts describe $sa --project $Project *> $null
-  if ($LASTEXITCODE) { Gcloud iam service-accounts create $service --display-name 'Arth API' }
-  Gcloud projects add-iam-policy-binding $Project --member "serviceAccount:$sa" --role roles/datastore.user --condition=None | Out-Null
+  if ($LASTEXITCODE) { Invoke-Gcloud iam service-accounts create $service --display-name 'Arth API' }
+  Invoke-Gcloud projects add-iam-policy-binding $Project --member "serviceAccount:$sa" --role roles/datastore.user --condition=None | Out-Null
 
   Step 'Keys into Secret Manager'
   PutSecret 'gemini-api-key' (EnvValue 'GEMINI_API_KEY')
@@ -65,7 +66,7 @@ if ($Only -in 'all', 'api') {
   $origins = "https://$Project.web.app,https://$Project.firebaseapp.com,https://localhost,http://localhost:5173"
   # ^@^ switches the list separator to @ so the comma-separated origins stay one value
   $vars = "^@^ARTH_ENV=production@ARTH_STORE=firestore@ARTH_FIREBASE_PROJECT_ID=$Project@ARTH_CORS_ORIGINS=$origins"
-  Gcloud run deploy $service `
+  Invoke-Gcloud run deploy $service `
     --source (Join-Path $root 'backend') `
     --region $Region `
     --service-account $sa `
