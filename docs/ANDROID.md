@@ -51,8 +51,9 @@ $env:ANDROID_HOME = "D:\Android SDk"         # Android Studio -> Settings -> And
 
 ## 2 · Firebase setup (manual, once)
 
-The Firebase **web** config in `frontend/.env.local` stays as it is. The Android app
-is added to the **same** Firebase project:
+Arth uses the Firebase project **`arth-solo-2026`** (owned by the solo account; its web
+config is in `frontend/.env.local`). The Android app is added to the **same** project:
+<https://console.firebase.google.com/project/arth-solo-2026/settings/general>.
 
 1. Get the SHA-1 of your debug signing key. The debug keystore is created by the
    first debug build (or by Android Studio) at `%USERPROFILE%\.android\debug.keystore`:
@@ -66,8 +67,8 @@ is added to the **same** Firebase project:
    - Package name: `in.arth.app`
    - Debug signing certificate SHA-1: the value from step 1 (it is required for
      Google sign-in).
-3. **Authentication → Sign-in method → Google** must be enabled (it already is for
-   the web app).
+3. **Authentication → Get started → Sign-in method → Google** must be enabled (same
+   switch the web app needs).
 4. Download **`google-services.json`** and put it at
    **`frontend/android/app/google-services.json`**. It is git-ignored: never commit it.
    If you add a SHA-1 later, download the file again.
@@ -93,7 +94,9 @@ Set `VITE_API_BASE_URL` in `.env.android.local`:
   Wi-Fi, and Windows Firewall must allow inbound TCP 8000 for Node. Plain `http`
   works only in **debug** builds (`android/app/src/debug/AndroidManifest.xml`
   allows cleartext there); release builds are https-only.
-- **Later:** the Cloud Run `https://…run.app` URL.
+- **After `scripts\deploy.ps1`:** `https://arth-solo-2026.web.app/api`. Firebase
+  Hosting forwards `/api/**` to the Cloud Run service, so this is the same API the
+  website uses. It is https, so it also works in release builds.
 
 `build:android` stops with an error if this is not an absolute `http(s)://` URL.
 
@@ -104,7 +107,7 @@ Set `VITE_API_BASE_URL` in `.env.android.local`:
 ARTH_CORS_ORIGINS=http://localhost:5173,https://localhost
 ```
 
-(in `backend/.env` locally, and in the Cloud Run service's environment).
+(in `backend/.env` locally; `scripts\deploy.ps1` already sets it on Cloud Run).
 
 ## 4 · Build and sync
 
