@@ -376,7 +376,7 @@ The most polished screen in the app, in Rutu's palette and fonts.
 - Wordmark **Arth** with **अर्थ** beneath in Tiro display; a crossfading tagline cycling
   en / hi / mr every ~3 s (static under reduced motion).
 - Language chips (मराठी · हिंदी · English) — picking one sets the app language.
-- Trust chips: "🔒 Photos never stored", "🗑️ Delete anytime", "🇮🇳 Made for Maharashtra".
+- Trust chip: "📍 Made for Maharashtra" (privacy details live in the Privacy Notice sheet).
 - Official Google sign-in button (white, Google "G" mark, per brand guidelines).
 - Footer link "Privacy Notice" opening a bottom sheet (what we store / never store / 30-day delete).
 - Must look right at 360 px and 414 px widths.

@@ -213,8 +213,6 @@ export default function LoginPage() {
         </div>
 
         <div className="dawn-up-3 mt-5 flex flex-wrap justify-center gap-2">
-          <TrustChip icon="lock">{t('trustPhotos')}</TrustChip>
-          <TrustChip icon="trash">{t('trustDelete')}</TrustChip>
           <TrustChip icon="pin">{t('trustMade')}</TrustChip>
         </div>
 
