@@ -1,0 +1,2 @@
+# the root .gitignore ignores .env.*; this example is safe to commit
+!.env.android.example

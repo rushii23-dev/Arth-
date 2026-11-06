@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: lets the app reach a backend on the PC's LAN IP over plain
+     http (VITE_API_BASE_URL=http://192.168.x.x:8000). Release builds keep Android's
+     default of https only, which the Cloud Run URL is. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>
