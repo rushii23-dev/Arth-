@@ -1,0 +1,32 @@
+# Render Blueprint for the Arth API on Render's free plan, until the project has Google Cloud
+# credits (then scripts/deploy.ps1 moves it to Cloud Run). Firestore, Firebase Auth and the
+# Gemini API stay on Google either way.
+#
+# Render -> New -> Blueprint -> pick this repo. It asks for the three secret values below
+# (never commit them). The free plan sleeps after ~15 minutes idle; the app waits for it to
+# wake on the first request (frontend/src/lib/api/client.ts).
+services:
+  - type: web
+    name: arth-api
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ARTH_FIREBASE_PROJECT_ID
+        value: arth-solo-2026
+      # the Android app (https://localhost), the Firebase Hosting site and local development
+      - key: ARTH_CORS_ORIGINS
+        value: https://localhost,https://arth-solo-2026.web.app,https://arth-solo-2026.firebaseapp.com,http://localhost:5173
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ARTH_DATA_GOV_IN_API_KEY
+        sync: false
+      # Firebase console -> Project settings -> Service accounts -> Generate new private key;
+      # paste the whole JSON file here
+      - key: ARTH_FIREBASE_SERVICE_ACCOUNT
+        sync: false

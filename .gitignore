@@ -11,6 +11,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+*firebase-adminsdk*.json
+*service-account*.json
 *.local
 
 # editors / OS

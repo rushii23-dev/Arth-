@@ -59,6 +59,23 @@ export function setUnauthorizedHandler(fn: () => void) {
 const AI_TIMEOUT_MS = 20_000
 const DEFAULT_TIMEOUT_MS = 15_000
 
+/**
+ * A free-plan API host sleeps when idle and needs up to a minute to wake. The first request of a
+ * session waits once for /health, so the real calls don't time out while the server boots. When
+ * the API is already awake this is one quick round trip; if it fails (offline), the next request tries again.
+ */
+const WAKE_TIMEOUT_MS = 75_000
+let awake: Promise<void> | null = null
+function wakeApi(): Promise<void> {
+  awake ??= fetch(`${env.apiBaseUrl}/health`, { signal: AbortSignal.timeout(WAKE_TIMEOUT_MS), credentials: 'omit' }).then(
+    () => undefined,
+    () => {
+      awake = null
+    },
+  )
+  return awake
+}
+
 type Query = Record<string, string | number | boolean | undefined>
 
 interface RequestOptions {
@@ -82,6 +99,7 @@ async function authHeader(): Promise<Record<string, string>> {
 
 async function request<T>(method: string, path: string, opts: RequestOptions = {}): Promise<T> {
   const fullPath = buildPath(path, opts.query)
+  if (path !== '/health') await wakeApi()
   const isAi = path.startsWith('/ai/')
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), isAi ? AI_TIMEOUT_MS : DEFAULT_TIMEOUT_MS)
