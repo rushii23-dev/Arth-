@@ -2,6 +2,7 @@ import { CROPS, isCrop } from '../data/crops.js'
 import { canonicalDistrict, DISTRICTS, haversineKm, ROAD_FACTOR } from '../data/districts.js'
 import { ApiError } from '../errors.js'
 import { addDays, daysBetween } from '../lib/time.js'
+import { errorCode } from './upstreams.js'
 
 /** One market's price on one day, ₹/quintal. */
 export interface PriceRecord {
@@ -69,8 +70,8 @@ export function dataGovIn(apiKey: string, fetchFn: typeof fetch = fetch): MandiS
     let res: Response
     try {
       res = await fetchFn(`${API}/${resource}?${qs}`, { signal: AbortSignal.timeout(25_000) })
-    } catch {
-      throw new ApiError(502, 'mandi_unavailable', 'Mandi price service did not answer')
+    } catch (err) {
+      throw new ApiError(502, 'mandi_unavailable', `Mandi price service did not answer (${errorCode(err)})`)
     }
     if (res.status === 429) throw new ApiError(503, 'mandi_rate_limited', 'Mandi price service is busy, try again soon')
     if (!res.ok) throw new ApiError(502, 'mandi_unavailable', `Mandi price service error ${res.status}`)

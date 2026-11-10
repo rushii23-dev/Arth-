@@ -13,6 +13,7 @@ import { mandiRoutes } from './routes/mandi.js'
 import { planRoutes } from './routes/plan.js'
 import { weatherRoutes } from './routes/weather.js'
 import type { Llm } from './services/llm.js'
+import { upstreamProbe } from './services/upstreams.js'
 import type { MandiSource } from './services/mandi.js'
 import type { ForecastSource } from './services/weather.js'
 import type { Store } from './store/types.js'
@@ -32,9 +33,13 @@ export interface Deps {
 export function createApp({ config, store, verifyToken, forecast, mandi, llm, aiLimit, clock = () => new Date() }: Deps) {
   const api = new Hono<{ Variables: AuthVars }>()
 
-  api.get('/health', (c) =>
-    c.json({ ok: true, model: config.model, modelReady: Boolean(config.geminiApiKey), cloudSync: true }),
-  )
+  const probe = upstreamProbe(config.dataGovInApiKey)
+  api.get('/health', async (c) => {
+    const health = { ok: true, model: config.model, modelReady: Boolean(config.geminiApiKey), cloudSync: true }
+    // ?upstreams: can this host reach the weather and mandi sources (status codes only)
+    if (c.req.query('upstreams') === undefined) return c.json(health)
+    return c.json({ ...health, upstreams: await probe() })
+  })
 
   api.use('*', requireAuth(verifyToken))
   api.route('/farmer', farmerRoutes(store))

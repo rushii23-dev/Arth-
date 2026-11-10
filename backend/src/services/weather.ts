@@ -1,4 +1,5 @@
 import { ApiError } from '../errors.js'
+import { errorCode } from './upstreams.js'
 import { dayLabel, sentenceCase, t } from '../lib/i18n.js'
 import type { LangCode } from '../lib/time.js'
 
@@ -87,10 +88,14 @@ export function openMeteo(fetchFn: typeof fetch = fetch): ForecastSource {
     let res: Response
     try {
       res = await fetchFn(url, { signal: AbortSignal.timeout(8000) })
-    } catch {
+    } catch (err) {
+      console.log(JSON.stringify({ severity: 'WARNING', msg: 'weather fetch failed', error: errorCode(err) }))
       throw new ApiError(502, 'weather_unavailable', 'Weather service did not answer')
     }
-    if (!res.ok) throw new ApiError(502, 'weather_unavailable', `Weather service error ${res.status}`)
+    if (!res.ok) {
+      console.log(JSON.stringify({ severity: 'WARNING', msg: 'weather fetch failed', status: res.status }))
+      throw new ApiError(502, 'weather_unavailable', `Weather service error ${res.status}`)
+    }
     const j = (await res.json()) as OpenMeteoResponse
     const d = j.daily
     const daily: WeatherDay[] = d.time.map((date, i) => {
