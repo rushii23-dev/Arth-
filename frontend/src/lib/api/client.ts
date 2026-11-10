@@ -67,12 +67,18 @@ const DEFAULT_TIMEOUT_MS = 15_000
 const WAKE_TIMEOUT_MS = 75_000
 let awake: Promise<void> | null = null
 function wakeApi(): Promise<void> {
-  awake ??= fetch(`${env.apiBaseUrl}/health`, { signal: AbortSignal.timeout(WAKE_TIMEOUT_MS), credentials: 'omit' }).then(
-    () => undefined,
-    () => {
-      awake = null
-    },
-  )
+  if (awake) return awake
+  // AbortController + setTimeout, not AbortSignal.timeout: older Android WebViews lack the latter
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), WAKE_TIMEOUT_MS)
+  awake = fetch(`${env.apiBaseUrl}/health`, { signal: controller.signal, credentials: 'omit' })
+    .then(
+      () => undefined,
+      () => {
+        awake = null
+      },
+    )
+    .finally(() => clearTimeout(timer))
   return awake
 }
 
