@@ -30,7 +30,16 @@ describe('Firebase ID token check', () => {
   })
 
   it('accepts a valid token and returns its sub as the user ID', async () => {
-    expect(await verify(await sign(good()))).toBe('farmer-uid-1')
+    expect(await verify(await sign(good()))).toEqual({ uid: 'farmer-uid-1', email: null })
+  })
+
+  it('keeps the email only when Google marks it verified, lower-cased', async () => {
+    expect(await verify(await sign({ ...good(), email: 'Founder@Example.com', email_verified: true }))).toEqual({
+      uid: 'farmer-uid-1',
+      email: 'founder@example.com',
+    })
+    expect(await verify(await sign({ ...good(), email: 'founder@example.com', email_verified: false }))).toEqual({ uid: 'farmer-uid-1', email: null })
+    expect(await verify(await sign({ ...good(), email: 'founder@example.com' }))).toEqual({ uid: 'farmer-uid-1', email: null })
   })
 
   it('rejects another project, another issuer, an expired token and future times', async () => {

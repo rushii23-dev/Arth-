@@ -3,9 +3,10 @@ import type { AuthVars } from '../auth.js'
 import { ApiError, badRequest, notFound } from '../errors.js'
 import { FarmerProfileInput, type FarmerProfile } from '../schemas.js'
 import { soilOf } from '../services/soil.js'
+import type { Clock } from '../lib/time.js'
 import type { Store } from '../store/types.js'
 
-export function farmerRoutes(store: Store) {
+export function farmerRoutes(store: Store, clock: Clock = () => new Date()) {
   const r = new Hono<{ Variables: AuthVars }>()
 
   r.get('/me', async (c) => {
@@ -26,7 +27,7 @@ export function farmerRoutes(store: Store) {
     const uid = c.get('uid')
     const input = parsed.data
     const existing = await store.getFarmer(uid)
-    const now = new Date().toISOString()
+    const now = clock().toISOString()
     const farmerSetSoil = input.soilSource === 'farmer' && input.soilType !== undefined
     const profile: FarmerProfile = {
       ...input,
@@ -35,6 +36,8 @@ export function farmerRoutes(store: Store) {
       soilSource: farmerSetSoil ? 'farmer' : 'auto',
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
+      // server-owned: kept across saves; a new farmer has just been in the app
+      lastSeenAt: existing ? existing.lastSeenAt : now,
     }
     await store.putFarmer(uid, profile)
     return c.json(profile)

@@ -93,6 +93,7 @@ interface FarmerProfile {
   onboardedVersion?: number // onboarding questions version answered; below the current one the app asks again
   createdAt?: string
   updatedAt?: string
+  lastSeenAt?: string      // server-owned: last time the farmer opened Home (written at most once a day by GET /brief)
 }
 type FarmerProfileInput = Omit<FarmerProfile, 'createdAt' | 'updatedAt'>
 ```
@@ -157,6 +158,54 @@ interface PriceAlert {
 }
 interface ToolCallLog { name: string; args: Record<string, unknown>; ms: number }
 ```
+
+### District news (official sources only)
+
+`GET /news?lang=mr` → `DistrictNews` for the farmer's own district (from the profile, never the query).
+Once per district per IST day the backend asks Gemini (`ARTH_NEWS_MODEL`, default `gemini-2.5-flash`)
+with Google Search grounding for that day's farming news (IMD warnings and agromet advisories, scheme
+deadlines, APMC notices, Krishi Vibhag and ICAR advisories), in en/hi/mr at once. An item is kept only
+when its link is a page the search actually returned, on an official host (`*.gov.in`, `*.nic.in`,
+ICAR, Maharashtra's agricultural universities); nothing is invented. The day's answer, even empty, is
+cached in Firestore `districtNews/{District}_{YYYY-MM-DD}`, so 36 districts cost at most 36 grounded
+prompts a day. The model sees only the district and the date. PII is masked in what is kept. If the
+AI is unavailable the list is empty (200), and the district is not asked again for 20 minutes.
+
+```ts
+interface DistrictNews {
+  district: string
+  date: string                   // IST day
+  items: NewsItem[]              // 0–4, newest first
+  model: string | null           // null when nothing was asked
+}
+interface NewsItem { headline: string; summary: string; source: string; url: string; date: string }
+```
+
+### Founder dashboard (admins only)
+
+Admins are verified Google sign-in emails listed in `ARTH_ADMIN_EMAILS` (comma-separated). The
+token's `email` counts only when `email_verified` is true.
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/admin/access` | `{ admin: boolean }` — about the caller only, for every signed-in user |
+| GET | `/admin/overview` | `AdminOverview`; 403 `forbidden` for anyone not on the list |
+
+```ts
+interface AdminOverview {
+  generatedAt: string
+  today: string
+  totals: { farmers: number; signupsToday: number; signups7d: number; activeToday: number; active7d: number; inactive7d: number }
+  byDistrict: { key: string; count: number }[]
+  byCrop: { key: string; count: number }[]
+  byLang: { key: string; count: number }[]
+  recent: AdminFarmer[]          // newest 30 signups
+  inactive: AdminFarmer[]        // not seen for 7+ days, longest first (60 at most)
+}
+interface AdminFarmer { name: string; village: string; district: string; crops: string[]; lang: string; signedUpAt: string | null; lastSeenAt: string | null }
+```
+
+Both answers are `Cache-Control: no-store`. No UID, email or coordinates are returned.
 
 ### Weather
 

@@ -43,4 +43,6 @@ export type FarmerProfile = Omit<FarmerProfileInput, 'soilType'> & {
   soilType: z.infer<typeof SoilType>
   createdAt: string
   updatedAt: string
+  /** server-owned: when the farmer last opened Home, written at most once a day */
+  lastSeenAt?: string
 }

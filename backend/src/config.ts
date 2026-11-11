@@ -13,6 +13,10 @@ export interface Config {
   dataGovInApiKey: string
   /** Rough truck cost used in sell advice, ₹ per quintal per km. */
   transportRsPerQuintalKm: number
+  /** Model for the daily district news; it must support Google Search grounding (Gemma does not). */
+  newsModel: string
+  /** Verified Google sign-in emails that may open the founder dashboard (lower-case). */
+  adminEmails: string[]
 }
 
 export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
@@ -29,6 +33,8 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     audioModel: e.ARTH_AUDIO_MODEL || 'gemini-2.5-flash',
     dataGovInApiKey: e.ARTH_DATA_GOV_IN_API_KEY ?? '',
     transportRsPerQuintalKm: Number(e.ARTH_TRANSPORT_RS_PER_QUINTAL_KM ?? 2),
+    newsModel: e.ARTH_NEWS_MODEL || 'gemini-2.5-flash',
+    adminEmails: parseList(e.ARTH_ADMIN_EMAILS ?? '').map((x) => x.toLowerCase()),
   }
   if (!cfg.firebaseProjectId && env !== 'test') throw new Error('ARTH_FIREBASE_PROJECT_ID is required')
   if (store !== 'memory' && store !== 'firestore') throw new Error(`ARTH_STORE must be memory or firestore, got ${store}`)

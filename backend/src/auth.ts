@@ -2,8 +2,17 @@ import type { MiddlewareHandler } from 'hono'
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose'
 import { ApiError } from './errors.js'
 
-/** Verifies a Firebase ID token and returns the user ID (the JWT `sub`). */
-export type TokenVerifier = (token: string) => Promise<string>
+/** Who a verified token belongs to. `email` is kept only when Google says the address is verified. */
+export interface Identity {
+  uid: string
+  email: string | null
+}
+
+/**
+ * Verifies a Firebase ID token and returns the user ID (the JWT `sub`), or the full identity.
+ * A bare string is a UID with no verified email (tests and older callers).
+ */
+export type TokenVerifier = (token: string) => Promise<string | Identity>
 
 /** Google's public keys for Firebase ID tokens (rotated by Google; jose caches and refetches them). */
 const FIREBASE_JWKS = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
@@ -30,11 +39,13 @@ export function firebaseVerifier(projectId: string, keys: JWTVerifyGetKey = crea
     if (typeof sub !== 'string' || sub.length === 0 || sub.length > 128) throw new Error('bad sub')
     if (typeof payload.iat !== 'number' || payload.iat > now) throw new Error('issued in the future')
     if (typeof payload.auth_time !== 'number' || payload.auth_time > now) throw new Error('authenticated in the future')
-    return sub
+    // the email only counts when Google has verified it (an unverified address proves nothing)
+    const email = typeof payload.email === 'string' && payload.email_verified === true ? payload.email.trim().toLowerCase() : null
+    return { uid: sub, email }
   }
 }
 
-export type AuthVars = { uid: string }
+export type AuthVars = { uid: string; email: string | null }
 
 /** SPEC §5.2: the UID comes only from the verified token, never from the body or query. */
 export function requireAuth(verify: TokenVerifier): MiddlewareHandler<{ Variables: AuthVars }> {
@@ -42,13 +53,15 @@ export function requireAuth(verify: TokenVerifier): MiddlewareHandler<{ Variable
     const header = c.req.header('Authorization') ?? ''
     const match = /^Bearer\s+(\S+)$/i.exec(header)
     if (!match?.[1]) throw new ApiError(401, 'unauthorized', 'Sign in required')
-    let uid: string
+    let who: Identity
     try {
-      uid = await verify(match[1])
+      const r = await verify(match[1])
+      who = typeof r === 'string' ? { uid: r, email: null } : r
     } catch {
       throw new ApiError(401, 'unauthorized', 'Invalid or expired sign-in')
     }
-    c.set('uid', uid)
+    c.set('uid', who.uid)
+    c.set('email', who.email)
     await next()
   }
 }

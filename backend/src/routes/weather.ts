@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { AuthVars } from '../auth.js'
 import { notFound } from '../errors.js'
-import type { Clock } from '../lib/time.js'
+import { istDate, type Clock } from '../lib/time.js'
 import { Lang, round2 } from '../schemas.js'
 import { buildBrief } from '../services/brief.js'
 import type { MandiSource } from '../services/mandi.js'
@@ -38,8 +38,14 @@ export function weatherRoutes(deps: { store: Store; forecast: ForecastSource; ma
 
   r.get('/brief', async (c) => {
     const { lang } = parseQuery(BriefQuery, c.req.query())
-    const profile = await deps.store.getFarmer(c.get('uid'))
+    const uid = c.get('uid')
+    const profile = await deps.store.getFarmer(uid)
     if (!profile) throw notFound('no_profile', 'No farmer profile yet')
+    // "last seen" for the founder dashboard: at most one write a day, never in the farmer's way
+    const now = deps.clock()
+    if (!profile.lastSeenAt || istDate(new Date(profile.lastSeenAt)) !== istDate(now)) {
+      await deps.store.touchFarmer(uid, now.toISOString()).catch(() => {})
+    }
     return c.json(await buildBrief(profile, lang ?? profile.lang, deps))
   })
 

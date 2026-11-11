@@ -3,6 +3,7 @@ import { createApp } from './app.js'
 import { firebaseVerifier } from './auth.js'
 import { loadConfig } from './config.js'
 import { gemini } from './services/llm.js'
+import { geminiSearch, resolveGroundingLink } from './services/news.js'
 import { cachedMandi, dataGovIn } from './services/mandi.js'
 import { cached, openMeteo } from './services/weather.js'
 import { firestoreStore } from './store/firestore.js'
@@ -31,6 +32,8 @@ export function buildServer() {
     forecast: cached(openMeteo()),
     mandi: cachedMandi(dataGovIn(config.dataGovInApiKey), undefined, undefined, store, warn),
     llm: gemini(config.geminiApiKey),
+    newsSearch: geminiSearch(config.geminiApiKey),
+    resolveLink: resolveGroundingLink(),
   })
   return { app, config }
 }
