@@ -156,9 +156,19 @@ body {
   animation: arth-shimmer 1.4s ease-in-out infinite;
 }
 
-/* bottom sheet */
+/* bottom sheet: slides up over a fading scrim, and back down on close */
 @keyframes arth-sheet { from { transform: translateY(100%); } to { transform: none; } }
-.sheet-in { animation: arth-sheet .32s cubic-bezier(.22,.7,.2,1) both; }
+@keyframes arth-sheet-out { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes arth-scrim { from { opacity: 0; } to { opacity: 1; } }
+.sheet-in  { animation: arth-sheet .34s cubic-bezier(.22,.8,.2,1) both; }
+.sheet-out { animation: arth-sheet-out .22s cubic-bezier(.4,0,.8,.4) both; }
+.scrim-in  { animation: arth-scrim .25s ease both; }
+.scrim-out { animation: arth-scrim .22s ease reverse both; }
+
+/* the overlay layer on top of the app frame (components/ui/OverlayLayer.tsx): sheets and
+   full-screen moments, above the nav (20), the mic (30) and the status-bar strip (40) */
+.arth-layer { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
+.arth-layer > * { pointer-events: auto; }
 
 /* ---- Login: dawn ------------------------------------------------------- */
 @keyframes arth-sunrise {
@@ -191,7 +201,7 @@ body {
 .tagline    { transition: opacity .6s ease, transform .6s ease; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fade, .arth-pulse, .skeleton, .sheet-in,
+  .fade, .arth-pulse, .skeleton, .sheet-in, .sheet-out, .scrim-in, .scrim-out,
   .dawn-sun, .dawn-glow, .dawn-far, .dawn-mark, .dawn-up-1, .dawn-up-2, .dawn-up-3 {
     animation: none !important;
     opacity: 1;
@@ -204,6 +214,18 @@ body {
 /* Wide letter-spacing splits Devanagari conjuncts apart ("आ म चा"), so the
    eyebrow tracking used across the app only applies to English. */
 html:not([lang="en"]) [class*="tracking-["] { letter-spacing: 0.01em !important; }
+
+/* ---- Help guide (features/profile/GuideSheet.tsx): the thing to tap pulses ---- */
+@keyframes guide-ping {
+  0%   { transform: scale(1); opacity: .9; }
+  80%, 100% { transform: scale(1.7); opacity: 0; }
+}
+.guide-ping { animation: guide-ping 1.6s cubic-bezier(.2, .6, .4, 1) infinite; }
+.guide-hint { animation: arth-rise .5s ease-out .35s both; }
+@media (prefers-reduced-motion: reduce) {
+  .guide-ping { animation: none; opacity: .6; }
+  .guide-hint { animation: none; }
+}
 
 /* ---- Safe areas ----------------------------------------------------------
    Android draws the app edge to edge (behind the clock and the gesture bar).

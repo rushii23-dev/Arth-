@@ -1,46 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BottomSheet, KCC_NUMBER } from '@/components/ui'
+import { KCC_NUMBER } from '@/components/ui'
+import { GuideSheet } from './GuideSheet'
 import { FEEDBACK_EMAIL, KCC_TEL, shareApp, type ShareResult } from './profileData'
-import { IconBubble, PIcon, Row, RowGroup, type PIconName } from './parts'
-
-const GUIDE_ICONS: PIconName[] = ['home', 'mic', 'doctor', 'mandi', 'label', 'schemes']
-
-function GuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useTranslation('profile')
-  const steps = t('guide.steps', { returnObjects: true }) as { t: string; b: string }[]
-  const faq = t('guide.faq', { returnObjects: true }) as { q: string; a: string }[]
-  return (
-    <BottomSheet open={open} onClose={onClose} title={t('guide.title')}>
-      <ol className="space-y-2">
-        {(Array.isArray(steps) ? steps : []).map((s, i) => (
-          <li key={i} className="flex items-start gap-3.5 rounded-[22px] bg-card p-3.5">
-            <span className="relative">
-              <IconBubble name={GUIDE_ICONS[i] ?? 'sparkle'} tint={i === 0 ? 'grow' : 'neutral'} />
-              <span className="num absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">{i + 1}</span>
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[16px] font-semibold leading-snug text-ink">{s.t}</span>
-              <span className="mt-0.5 block text-[14px] leading-snug text-muted">{s.b}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-      <h3 className="display mx-1 mb-2 mt-5 text-[20px] text-ink">{t('guide.faqTitle')}</h3>
-      <div className="divide-y divide-hair overflow-hidden rounded-[22px] bg-card">
-        {(Array.isArray(faq) ? faq : []).map((x, i) => (
-          <details key={i} className="group px-4">
-            <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-3 text-[15.5px] font-semibold text-ink [&::-webkit-details-marker]:hidden">
-              {x.q}
-              <PIcon name="chevron" size={16} className="text-hint transition group-open:rotate-90" />
-            </summary>
-            <p className="pb-4 text-[14.5px] leading-snug text-muted">{x.a}</p>
-          </details>
-        ))}
-      </div>
-    </BottomSheet>
-  )
-}
+import { PIcon, Row, RowGroup } from './parts'
 
 /** Kisan Call Centre first, then the guide, sharing and feedback. */
 export function HelpSection() {

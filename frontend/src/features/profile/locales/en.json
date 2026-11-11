@@ -117,7 +117,7 @@
     "call": "Call {{n}}",
     "hours": "Free call · 6 am – 10 pm, every day",
     "guide": "How to use Arth",
-    "guideSub": "6 things Arth can do for you",
+    "guideSub": "A short tour of Arth, step by step",
     "share": "Share Arth",
     "shareSub": "Send it to a farmer friend",
     "shared": "Thanks for sharing!",
@@ -130,19 +130,105 @@
   },
   "guide": {
     "title": "How to use Arth",
-    "steps": [
-      { "t": "Start every morning on Home", "b": "Today's 2–3 jobs, worked out from weather, mandi prices and your crop calendar." },
-      { "t": "Ask by voice", "b": "Tap the mic on any screen and speak in your own language." },
-      { "t": "Photo of a sick leaf", "b": "Crop Doctor names the problem and the treatment. The photo is never saved." },
-      { "t": "Sell at the best price", "b": "Compare nearby mandis after transport cost, and see whether to sell now or wait." },
-      { "t": "Read a pesticide label", "b": "The dose for your tank — only what is printed on the label, never a guess." },
-      { "t": "Find your schemes", "b": "A few yes/no questions show which government schemes you qualify for." }
+    "stepOf": "{{n}} of {{total}}",
+    "stepsLabel": "Guide steps",
+    "next": "Next",
+    "back": "Back",
+    "done": "Done",
+    "open": "Open {{screen}}",
+    "tapHere": "Tap here",
+    "screens": [
+      {
+        "key": "home",
+        "t": "Home: today's work",
+        "b": "Open Arth every morning. The big card is the one job that matters most today, worked out from your weather, mandi prices and crop calendar.",
+        "how": [
+          "Read the big green card first",
+          "Tap “Listen” to hear it aloud",
+          "Scroll down for weather, prices and district news"
+        ]
+      },
+      {
+        "key": "mic",
+        "t": "Ask by voice",
+        "b": "On any screen, tap the green mic and speak in Marathi, Hindi or English.",
+        "how": [
+          "Tap the mic and speak",
+          "Ask: “Should I spray today?”",
+          "Arth answers, and can open the right screen"
+        ]
+      },
+      {
+        "key": "doctor",
+        "t": "Crop Doctor",
+        "b": "A photo of a sick leaf tells you the likely problem and what to do. The photo is never saved.",
+        "how": [
+          "Tap Doctor at the bottom",
+          "Photograph one leaf up close, in daylight",
+          "Not sure? Call the Kisan Call Centre from the result"
+        ]
+      },
+      {
+        "key": "mandi",
+        "t": "Mandi prices",
+        "b": "Today's prices at mandis near you, and whether to sell now or wait.",
+        "how": [
+          "Tap Mandi and pick your crop",
+          "Compare mandis after transport cost",
+          "Open “Sell Smart” and enter your quantity"
+        ]
+      },
+      {
+        "key": "calendar",
+        "t": "Crop calendar",
+        "b": "What to sow and when, for your district, your soil and this year’s monsoon.",
+        "how": [
+          "Tap Calendar at the bottom",
+          "See where each of your crops stands today",
+          "Open a crop for its week-by-week plan"
+        ]
+      },
+      {
+        "key": "tools",
+        "t": "More tools on Home",
+        "b": "Read a pesticide label, find government schemes or understand a paper, from the tools at the bottom of Home.",
+        "how": [
+          "Label: the dose for your tank, only as printed",
+          "Schemes: a few yes/no questions",
+          "Kagaz: a photo of a paper, explained simply"
+        ]
+      },
+      {
+        "key": "profile",
+        "t": "Profile and settings",
+        "b": "Change your language, farm details and alerts, or get help.",
+        "how": [
+          "Tap Profile at the bottom",
+          "Settings has language, help and privacy",
+          "“Delete my data” is always there"
+        ]
+      }
     ],
+    "readyTitle": "You're ready",
+    "readyBody": "Start each day on Home. Whenever you are unsure, the Kisan Call Centre is free.",
     "faqTitle": "Common questions",
     "faq": [
-      { "q": "Is Arth free?", "a": "Yes. No payment and no ads." },
-      { "q": "Does it work without internet?", "a": "Screens you opened recently still show. Photos and voice need internet." },
-      { "q": "Are my photos saved?", "a": "No. They are read once to answer you, then thrown away." }
+      {
+        "q": "Is Arth free?",
+        "a": "Yes. No payment and no ads."
+      },
+      {
+        "q": "Does it work without internet?",
+        "a": "Screens you opened recently still show. Photos and voice need internet."
+      },
+      {
+        "q": "Are my photos saved?",
+        "a": "No. They are read once to answer you, then thrown away."
+      },
+      {
+        "q": "Where does the news on Home come from?",
+        "a": "Only official government pages, like IMD, Krishi Vibhag and ICAR. Tap a story to open its page."
+      }
     ]
   },
   "privacyS": {

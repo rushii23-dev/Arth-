@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { SkeletonScreen } from '@/components/ui'
+import { OverlayLayer, SkeletonScreen } from '@/components/ui'
 import { BottomNav, NAV_PATHS } from './BottomNav'
 import { MicSlot } from './MicSlot'
 
@@ -24,8 +24,10 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
   if (!wide)
     return (
       <div className="relative h-dvh w-full overflow-hidden bg-screen">
-        {children}
-        <div aria-hidden className="arth-statusbar" />
+        <OverlayLayer>
+          {children}
+          <div aria-hidden className="arth-statusbar" />
+        </OverlayLayer>
       </div>
     )
   return (
@@ -34,7 +36,7 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
         className="relative overflow-hidden bg-screen"
         style={{ width: 390, height: 844, borderRadius: 44, boxShadow: '0 30px 70px rgba(30,26,16,.28), 0 0 0 10px #17150F, 0 0 0 11px #35312a' }}
       >
-        {children}
+        <OverlayLayer>{children}</OverlayLayer>
       </div>
     </div>
   )
