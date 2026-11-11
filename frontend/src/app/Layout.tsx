@@ -1,8 +1,9 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { OverlayLayer, SkeletonScreen } from '@/components/ui'
 import { BottomNav, NAV_PATHS } from './BottomNav'
 import { MicSlot } from './MicSlot'
+import { Welcome } from '@/features/onboarding/Welcome'
 
 /**
  * On a laptop (a judge's screen) the app sits inside a phone bezel on the canvas,
@@ -44,8 +45,12 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
 
 /** The app shell: scrolling screen, bottom nav on the five main tabs, mic everywhere. */
 export function Layout() {
-  const { pathname, key } = useLocation()
+  const { pathname, key, state } = useLocation()
+  const nav = useNavigate()
   const showNav = NAV_PATHS.includes(pathname)
+  // set by onboarding for a new farmer; cleared once shown so Back or a reload does not repeat it
+  const welcome = (state as { welcome?: boolean } | null)?.welcome === true
+  const endWelcome = useCallback(() => nav(pathname, { replace: true, state: null }), [nav, pathname])
 
   return (
     <PhoneFrame>
@@ -61,6 +66,7 @@ export function Layout() {
       </div>
       {showNav ? <BottomNav /> : null}
       <MicSlot docked={showNav} />
+      {welcome ? <Welcome onDone={endWelcome} /> : null}
     </PhoneFrame>
   )
 }

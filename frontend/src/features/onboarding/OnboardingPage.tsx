@@ -108,7 +108,8 @@ function Flow({ editing, existing }: { editing: boolean; existing: FarmerProfile
     setFailed(false)
     try {
       await save.mutateAsync(toProfileInput(draft, lang, existing?.consentAt ?? getLocalConsent() ?? new Date().toISOString(), existing))
-      nav(editing ? '/profile' : '/', { replace: true })
+      // a new farmer gets the welcome moment on the way to Home (not an edit, not a re-ask of new questions)
+      nav(editing ? '/profile' : '/', { replace: true, state: !editing && !existing ? { welcome: true } : undefined })
     } catch {
       setFailed(true)
     }

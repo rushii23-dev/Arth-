@@ -215,6 +215,49 @@ body {
    eyebrow tracking used across the app only applies to English. */
 html:not([lang="en"]) [class*="tracking-["] { letter-spacing: 0.01em !important; }
 
+/* ---- Welcome (after onboarding): the sun rises, the sprout grows, three lines tick ---- */
+.welcome-glow {
+  background: radial-gradient(circle, rgba(232, 176, 75, .34) 0%, rgba(232, 176, 75, .12) 38%, rgba(232, 176, 75, 0) 68%);
+  animation: arth-glow 3.2s ease-in-out infinite;
+}
+@keyframes welcome-pop {
+  0%   { opacity: 0; transform: scale(.72) translateY(10px); }
+  60%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes welcome-sun {
+  from { transform: translateY(46px); opacity: .4; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes welcome-grow {
+  from { transform: scaleY(.2); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes welcome-bar {
+  from { width: 6%; }
+  to   { width: 88%; }
+}
+.welcome-mark   { animation: welcome-pop .7s cubic-bezier(.3, 1.3, .5, 1) both; }
+.welcome-sun    { animation: welcome-sun 1.1s cubic-bezier(.22, .7, .2, 1) .15s both; transform-box: view-box; }
+.welcome-sprout { animation: welcome-grow .8s cubic-bezier(.22, .9, .3, 1.1) .55s both; transform-origin: 256px 356px; transform-box: view-box; }
+.welcome-up-1   { animation: arth-rise .6s ease-out .25s both; }
+.welcome-up-2   { animation: arth-rise .6s ease-out .4s both; }
+.welcome-up-3   { animation: arth-rise .6s ease-out .55s both; }
+.welcome-tick   { animation: arth-check-in .3s cubic-bezier(.3, 1.5, .5, 1) both; }
+.welcome-bar    { width: 88%; animation: welcome-bar 2.2s cubic-bezier(.3, .6, .3, 1) .3s both; transition: width .3s ease; }
+.welcome-bar-done { width: 100%; animation: none; }
+.welcome-out    { animation: arth-scrim .38s ease reverse both; }
+.welcome-out .welcome-mark { animation: none; transform: scale(1.06); transition: transform .38s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .welcome-glow, .welcome-mark, .welcome-sun, .welcome-sprout, .welcome-up-1, .welcome-up-2, .welcome-up-3,
+  .welcome-tick, .welcome-bar, .welcome-out {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  .welcome-out .welcome-mark { transition: none; }
+}
+
 /* ---- Help guide (features/profile/GuideSheet.tsx): the thing to tap pulses ---- */
 @keyframes guide-ping {
   0%   { transform: scale(1); opacity: .9; }

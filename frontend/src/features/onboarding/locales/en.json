@@ -143,5 +143,15 @@
   },
   "soilFound": "{{soil}} soil in {{district}}",
   "soilFoundBody": "From {{samples}} Soil Health Card tests: {{n}}% of fields here are low in nitrogen. Nothing to fill in.",
-  "soilFoundNoTests": "Read from your district. Nothing to fill in."
+  "soilFoundNoTests": "Read from your district. Nothing to fill in.",
+  "welcomeMoment": {
+    "title": "Welcome to Arth, {{name}}",
+    "titleNoName": "Welcome to Arth",
+    "sub": "We’re setting things up for you",
+    "steps": [
+      "Today’s weather for your farm",
+      "Mandi prices for your crops",
+      "Your crop calendar"
+    ]
+  }
 }
