@@ -177,7 +177,7 @@ export default function LoginPage() {
   return (
     <div className="sc flex h-full flex-col overflow-y-auto overflow-x-hidden bg-screen">
       {/* sky: wordmark + tagline over the dawn */}
-      <section className="relative min-h-[330px] flex-1 px-7 pt-[max(40px,env(safe-area-inset-top))]">
+      <section className="relative min-h-[330px] flex-1 px-7 pt-[calc(64px+var(--sat))]">
         <Dawn />
         <div className="relative">
         <div className="dawn-mark">
@@ -194,7 +194,7 @@ export default function LoginPage() {
       </section>
 
       {/* ground: actions */}
-      <section className="px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-1">
+      <section className="px-5 pb-[max(20px,var(--sab))] pt-1">
         <div className="dawn-up-2 space-y-2.5">
           <button
             type="button"

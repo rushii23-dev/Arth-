@@ -26,7 +26,7 @@ export function BottomSheet({ open, onClose, title, children }: { open: boolean;
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === 'string' ? title : undefined}
-        className="sheet-in relative max-h-[86dvh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-screen px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-3 outline-none"
+        className="sheet-in relative max-h-[86dvh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-screen px-5 pb-[max(24px,var(--sab))] pt-3 outline-none"
       >
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-track" />
         <div className="mb-3 flex items-start justify-between gap-3">

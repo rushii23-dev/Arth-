@@ -45,7 +45,13 @@
          a refusal reaches the page as NotAllowedError, which the voice button already shows. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- "Use my location" in onboarding (navigator.geolocation). Capacitor's WebView asks for
+         both at runtime; the farmer may grant only approximate, which is all the app needs
+         (the point is rounded to ~1 km). Without these, Android refuses silently. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
 </manifest>

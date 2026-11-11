@@ -17,6 +17,9 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- Android 12+: the system splash shows the Arth mark on Arth green -->
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground_arth</item>
+        <item name="android:background">@drawable/splash_arth</item>
     </style>
 </resources>

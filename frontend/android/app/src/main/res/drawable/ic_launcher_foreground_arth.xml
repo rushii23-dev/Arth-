@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Arth's mark (public/logo.svg) as the adaptive icon's foreground: the gold coin-sun, the sprout
+     and the furrows, scaled into the 66dp safe zone of the 108dp canvas so no launcher mask cuts it.
+     The coin's dotted ring is drawn as a faint solid ring (vector drawables have no dashes). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.15"
+        android:scaleY="0.15"
+        android:translateX="15.6"
+        android:translateY="10.8">
+        <path
+            android:fillColor="#E8B04B"
+            android:pathData="M132,228a124,124 0 1,0 248,0a124,124 0 1,0 -248,0" />
+        <path
+            android:strokeColor="#C98F2E"
+            android:strokeAlpha="0.55"
+            android:strokeWidth="5"
+            android:pathData="M152,228a104,104 0 1,0 208,0a104,104 0 1,0 -208,0" />
+        <path
+            android:strokeColor="#E9E5DA"
+            android:strokeWidth="22"
+            android:strokeLineCap="round"
+            android:pathData="M92,382Q256,330 420,382" />
+        <path
+            android:strokeColor="#E9E5DA"
+            android:strokeAlpha="0.8"
+            android:strokeWidth="18"
+            android:strokeLineCap="round"
+            android:pathData="M120,428Q256,388 392,428" />
+        <path
+            android:strokeColor="#E9E5DA"
+            android:strokeAlpha="0.6"
+            android:strokeWidth="14"
+            android:strokeLineCap="round"
+            android:pathData="M156,466Q256,438 356,466" />
+        <path
+            android:strokeColor="#1F4A2B"
+            android:strokeWidth="16"
+            android:strokeLineCap="round"
+            android:pathData="M256,356V196" />
+        <path
+            android:fillColor="#245231"
+            android:pathData="M256,268C232,214 190,196 150,204C160,252 204,282 256,268Z" />
+        <path
+            android:fillColor="#5C9A62"
+            android:pathData="M256,224C276,160 322,136 370,142C362,200 314,236 256,224Z" />
+        <path
+            android:strokeColor="#E9E5DA"
+            android:strokeAlpha="0.45"
+            android:strokeWidth="4"
+            android:strokeLineCap="round"
+            android:pathData="M250,262C224,238 196,222 164,210M262,220C292,192 322,170 356,152" />
+    </group>
+</vector>

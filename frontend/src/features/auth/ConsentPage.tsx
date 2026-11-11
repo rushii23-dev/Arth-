@@ -43,7 +43,7 @@ export default function ConsentPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col px-5 pb-8 pt-[max(24px,env(safe-area-inset-top))]">
+    <div className="flex min-h-full flex-col px-5 pb-8 pt-[max(24px,var(--sat))]">
       <LanguageSwitcher className="self-end" />
       <h1 className="display mt-8 text-[36px] leading-tight text-ink">{t('title')}</h1>
       <p className="mt-2 text-[17px] text-muted">{t('sub')}</p>

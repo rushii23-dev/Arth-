@@ -27,7 +27,7 @@ export default function OnboardingPage() {
   // editing needs the saved profile before the draft is built from it
   if (editing && farmer.isPending) {
     return (
-      <div className="px-5 pt-[max(24px,env(safe-area-inset-top))]">
+      <div className="px-5 pt-[max(24px,var(--sat))]">
         <SkeletonScreen cards={4} />
       </div>
     )
@@ -120,7 +120,7 @@ function Flow({ editing, existing }: { editing: boolean; existing: FarmerProfile
   const missing = firstMissing(draft)
 
   return (
-    <div className="flex min-h-full flex-col px-5 pt-[max(16px,env(safe-area-inset-top))]">
+    <div className="flex min-h-full flex-col px-5 pt-[max(16px,var(--sat))]">
       <ProgressHeader n={q ? step + 1 : total} total={total} onBack={back} />
 
       <StepTransition stepKey={step} dir={dir}>
@@ -129,7 +129,7 @@ function Flow({ editing, existing }: { editing: boolean; existing: FarmerProfile
         </div>
       </StepTransition>
 
-      <div className="sticky bottom-0 -mx-5 bg-linear-to-t from-screen from-75% to-transparent px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-6">
+      <div className="sticky bottom-0 -mx-5 bg-linear-to-t from-screen from-75% to-transparent px-5 pb-[max(20px,var(--sab))] pt-6">
         {q ? (
           q.optional && !answered ? (
             // nothing chosen yet on an optional question: the one way on is "Skip"

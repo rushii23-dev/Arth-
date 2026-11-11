@@ -205,70 +205,131 @@ body {
    eyebrow tracking used across the app only applies to English. */
 html:not([lang="en"]) [class*="tracking-["] { letter-spacing: 0.01em !important; }
 
-/* ---- Bottom nav: a floating bar of five tabs, the voice button beside it -- */
+/* ---- Safe areas ----------------------------------------------------------
+   Android draws the app edge to edge (behind the clock and the gesture bar).
+   Capacitor 8 injects --safe-area-inset-* on the root, which also covers older
+   WebViews whose env() values are 0; browsers fall back to env(). */
+:root {
+  --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+/* a solid strip behind the phone's status bar, so scrolled text never runs under the clock */
+.arth-statusbar {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--sat);
+  background: var(--color-screen);
+  pointer-events: none;
+}
+
+/* ---- Bottom nav: a full-width bar of five tabs, the voice button above it --
+   Every tab keeps a label (many farmers read little). The active tab: a line
+   that slides along the top edge, a soft green bloom behind the icon, and a
+   small pop as the icon settles. */
 .arth-nav {
-  --nav-side: 12px;
-  --nav-pad: 6px;
-  --nav-h: 68px;
-  --nav-bottom: max(12px, env(safe-area-inset-bottom));
+  --nav-h: 64px;
   position: absolute;
   z-index: 20;
-  left: var(--nav-side);
-  right: var(--nav-side);
-  bottom: var(--nav-bottom);
-  display: flex;
-  align-items: stretch;
-  height: var(--nav-h);
-  padding: var(--nav-pad);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .92);
-  border: 1px solid rgba(23, 21, 15, .06);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, .9) inset,
-    0 18px 36px -16px rgba(23, 21, 15, .28),
-    0 3px 10px -4px rgba(23, 21, 15, .08);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  height: calc(var(--nav-h) + var(--sab));
+  padding-bottom: var(--sab);
+  background: rgba(255, 253, 247, .97);
+  border-top: 1px solid rgba(23, 21, 15, .07);
+  box-shadow: 0 -12px 28px -20px rgba(23, 21, 15, .35);
   -webkit-backdrop-filter: saturate(1.4) blur(14px);
   backdrop-filter: saturate(1.4) blur(14px);
 }
-/* the voice button gets its own circle to the right, so the bar is never crowded */
-.arth-nav[data-mic] { right: calc(var(--nav-side) + var(--nav-h) + 8px); }
-.arth-nav-tabs {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+.arth-nav-line {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 20%;
+  height: 3px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transition: transform .45s cubic-bezier(.22, .9, .24, 1), opacity .2s ease;
+}
+.arth-nav-line::before {
+  content: '';
+  width: 40px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--color-grow);
 }
 .arth-nav-tab {
   position: relative;
-  z-index: 1;
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  border-radius: 999px;
+  gap: 4px;
+  overflow: hidden;
   color: var(--color-muted);
   background: none;
   border: 0;
   -webkit-tap-highlight-color: transparent;
 }
+/* a soft ripple from the finger, fading on release */
+.arth-nav-tab::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 50%;
+  background: rgba(46, 107, 63, .12);
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .45s ease, opacity .6s ease;
+}
+.arth-nav-tab:active::after { transform: scale(1); opacity: 1; transition: transform .25s ease, opacity 0s; }
 .arth-nav-icon {
+  position: relative;
   display: flex;
+  width: 56px;
   height: 30px;
   align-items: center;
   justify-content: center;
-  transition: transform .18s ease, color .25s ease;
+  transition: transform .2s ease;
 }
-.arth-nav-tab:active .arth-nav-icon { transform: scale(.88); }
-.arth-nav-tab[data-active] .arth-nav-icon { color: #fff; }
+.arth-nav-bloom {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--color-grow-l);
+  transform: scale(.3);
+  opacity: 0;
+  transition: transform .4s cubic-bezier(.3, 1.4, .5, 1), opacity .25s ease;
+}
+.arth-nav-icon > svg { position: relative; }
+.arth-nav-tab:active .arth-nav-icon { transform: scale(.9); }
+.arth-nav-tab[data-active] { color: var(--color-grow-d); }
+.arth-nav-tab[data-active] .arth-nav-bloom { transform: none; opacity: 1; }
+.arth-nav-tab[data-active] .arth-nav-icon > svg { animation: arth-nav-pop .5s cubic-bezier(.3, 1.5, .5, 1) both; }
+@keyframes arth-nav-pop {
+  0% { transform: scale(.82) translateY(2px); }
+  55% { transform: scale(1.16) translateY(-2px); }
+  100% { transform: none; }
+}
 .arth-nav-label {
   display: block;
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: clip;
+  padding: 0 2px;
   font-size: 11.5px;
   line-height: 14px;
   font-weight: 500;
@@ -277,54 +338,20 @@ html:not([lang="en"]) [class*="tracking-["] { letter-spacing: 0.01em !important;
   transition: color .25s ease;
 }
 .arth-nav-tab[data-active] .arth-nav-label { font-weight: 700; color: var(--color-grow-d); }
-/* the pill behind the active icon: one per bar, slid to the active column */
-.arth-nav-thumb {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 20%;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-  transition: transform .45s cubic-bezier(.22, .9, .24, 1);
-}
-.arth-nav-thumb > span {
-  /* centred on the icon row: (bar content − icon − gap − label) / 2 */
-  margin-top: calc((var(--nav-h) - 2 * var(--nav-pad) - 2px - 30px - 3px - 14px) / 2);
-  height: 30px;
-  width: min(52px, calc(100% - 4px));
-  border-radius: 999px;
-  background: var(--color-grow);
-  box-shadow: 0 6px 14px -6px rgba(46, 107, 63, .65);
-  animation: arth-pill-in .35s ease both;
-}
-@keyframes arth-pill-in { from { transform: scaleX(.6); opacity: 0; } to { transform: none; opacity: 1; } }
-/* MicButton docked beside the bar: same height, brand green while idle */
+/* MicButton floats just above the bar, bottom right */
 .arth-nav-mic {
-  width: 68px;
-  height: 68px;
-  right: 12px;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  width: 60px;
+  height: 60px;
+  right: 16px;
+  bottom: calc(var(--nav-h, 64px) + var(--sab) + 14px);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, .25) inset,
     0 14px 26px -10px rgba(36, 82, 49, .70);
 }
 .arth-nav-mic.bg-ink { background: linear-gradient(160deg, #3a8150, var(--color-grow-d)); }
-/* the screen fades out under the bar, so half-hidden rows don't peek below it */
-.arth-nav-scrim {
-  position: absolute;
-  z-index: 19;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(max(12px, env(safe-area-inset-bottom)) + 56px);
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(233, 229, 218, 0), var(--color-screen) 60%);
-}
 .arth-float-mic {
   right: 16px;
-  bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+  bottom: max(24px, calc(var(--sab) + 12px));
 }
 
 /* ---- Language switcher: segmented control with a sliding thumb ---------- */
@@ -341,12 +368,12 @@ html:not([lang="en"]) [class*="tracking-["] { letter-spacing: 0.01em !important;
 @keyframes arth-check-in { from { transform: scale(0); } to { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .arth-nav-thumb, .arth-lang-thumb { transition: none; }
-  .arth-nav-thumb > span, .arth-lang-check { animation: none; }
+  .arth-nav-line, .arth-lang-thumb, .arth-nav-bloom, .arth-nav-tab::after { transition: none; }
+  .arth-nav-tab[data-active] .arth-nav-icon > svg, .arth-lang-check { animation: none; }
   .arth-nav-tab:active .arth-nav-icon { transform: none; }
 }
 @media (max-width: 340px) {
-  .arth-nav { --nav-side: 8px; }
-  .arth-nav-mic { right: 8px; }
+  .arth-nav-icon { width: 46px; }
+  .arth-nav-mic { right: 10px; }
   .arth-nav-label { font-size: 10.5px; }
 }

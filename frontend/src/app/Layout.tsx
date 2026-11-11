@@ -1,7 +1,6 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { SkeletonScreen } from '@/components/ui'
-import { isVoiceSupported } from '@/components/voice'
 import { BottomNav, NAV_PATHS } from './BottomNav'
 import { MicSlot } from './MicSlot'
 
@@ -22,7 +21,13 @@ function useIsWide() {
 
 export function PhoneFrame({ children }: { children: ReactNode }) {
   const wide = useIsWide()
-  if (!wide) return <div className="relative h-dvh w-full overflow-hidden bg-screen">{children}</div>
+  if (!wide)
+    return (
+      <div className="relative h-dvh w-full overflow-hidden bg-screen">
+        {children}
+        <div aria-hidden className="arth-statusbar" />
+      </div>
+    )
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-5 py-9">
       <div
@@ -39,21 +44,20 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
 export function Layout() {
   const { pathname, key } = useLocation()
   const showNav = NAV_PATHS.includes(pathname)
-  const [hasMic] = useState(isVoiceSupported)
 
   return (
     <PhoneFrame>
       <div className="flex h-full flex-col">
         <main key={key} className="sc fade relative flex-1 overflow-y-auto overflow-x-hidden">
-          {/* bottom room for the nav (with its docked mic) or the floating mic, so neither covers the last row */}
-          <div className={`px-4 pt-4 ${showNav ? 'pb-[136px]' : 'pb-[100px]'}`}>
+          {/* top: clear of the phone's status bar; bottom: room for the nav and the mic above it, so neither covers the last row */}
+          <div className={`px-4 pt-[calc(16px+var(--sat))] ${showNav ? 'pb-[calc(150px+var(--sab))]' : 'pb-[100px]'}`}>
             <Suspense fallback={<SkeletonScreen />}>
               <Outlet />
             </Suspense>
           </div>
         </main>
       </div>
-      {showNav ? <BottomNav withMic={hasMic} /> : null}
+      {showNav ? <BottomNav /> : null}
       <MicSlot docked={showNav} />
     </PhoneFrame>
   )

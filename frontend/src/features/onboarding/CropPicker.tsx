@@ -127,7 +127,7 @@ function OtherCropsSheet({ open, onClose, crops, onChange }: { open: boolean; on
       )}
 
       {/* runs through the sheet's bottom padding so the list never shows beneath it */}
-      <div className="sticky bottom-[calc(-1*max(24px,env(safe-area-inset-bottom)))] -mx-1 -mb-[max(24px,env(safe-area-inset-bottom))] mt-5 bg-screen px-1 pb-[max(24px,env(safe-area-inset-bottom))] pt-2">
+      <div className="sticky bottom-[calc(-1*max(24px,var(--sab)))] -mx-1 -mb-[max(24px,var(--sab))] mt-5 bg-screen px-1 pb-[max(24px,var(--sab))] pt-2">
         <Button onClick={close}>{extraCount ? t('otherDoneCount', { n: extraCount }) : t('otherDone')}</Button>
       </div>
     </BottomSheet>
