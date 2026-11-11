@@ -27,7 +27,7 @@ export function buildServer() {
   const app = createApp({
     config,
     store,
-    verifyToken: firebaseVerifier(),
+    verifyToken: firebaseVerifier(config.firebaseProjectId),
     forecast: cached(openMeteo()),
     mandi: cachedMandi(dataGovIn(config.dataGovInApiKey), undefined, undefined, store, warn),
     llm: gemini(config.geminiApiKey),

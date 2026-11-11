@@ -1,15 +1,36 @@
 import type { MiddlewareHandler } from 'hono'
-import { getAuth } from 'firebase-admin/auth'
+import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose'
 import { ApiError } from './errors.js'
 
 /** Verifies a Firebase ID token and returns the user ID (the JWT `sub`). */
 export type TokenVerifier = (token: string) => Promise<string>
 
-export function firebaseVerifier(): TokenVerifier {
+/** Google's public keys for Firebase ID tokens (rotated by Google; jose caches and refetches them). */
+const FIREBASE_JWKS = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
+
+/**
+ * Firebase ID token check as Firebase documents it for third-party JWT libraries: RS256 signature by
+ * Google's securetoken keys, issuer https://securetoken.google.com/<project>, audience <project>, not
+ * expired, issued and authenticated in the past, and a non-empty `sub` of at most 128 characters.
+ * Done with `jose` rather than firebase-admin/auth, whose key fetcher (jwks-rsa) cannot load on
+ * serverless Node runtimes without require(esm).
+ */
+export function firebaseVerifier(projectId: string, keys: JWTVerifyGetKey = createRemoteJWKSet(new URL(FIREBASE_JWKS))): TokenVerifier {
+  if (!projectId) throw new Error('firebaseVerifier needs the Firebase project ID')
   return async (token) => {
-    // checks signature, expiry, issuer securetoken.google.com/<project> and audience <project>
-    const decoded = await getAuth().verifyIdToken(token)
-    return decoded.uid
+    const { payload } = await jwtVerify(token, keys, {
+      algorithms: ['RS256'],
+      issuer: `https://securetoken.google.com/${projectId}`,
+      audience: projectId,
+      requiredClaims: ['exp', 'iat', 'sub', 'auth_time'],
+      clockTolerance: 5,
+    })
+    const now = Date.now() / 1000 + 5
+    const sub = payload.sub
+    if (typeof sub !== 'string' || sub.length === 0 || sub.length > 128) throw new Error('bad sub')
+    if (typeof payload.iat !== 'number' || payload.iat > now) throw new Error('issued in the future')
+    if (typeof payload.auth_time !== 'number' || payload.auth_time > now) throw new Error('authenticated in the future')
+    return sub
   }
 }
 
