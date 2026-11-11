@@ -1,11 +1,14 @@
 import { getIdToken } from '../session'
 import { env } from '../env'
 import type {
+  AdminAccess,
+  AdminOverview,
   ApiErrorBody,
   Brief,
   CalendarResponse,
   CropDiagnosis,
   DeleteResult,
+  DistrictNews,
   DocumentExplanation,
   FarmerProfile,
   FarmerProfileInput,
@@ -58,6 +61,8 @@ export function setUnauthorizedHandler(fn: () => void) {
 
 const AI_TIMEOUT_MS = 20_000
 const DEFAULT_TIMEOUT_MS = 15_000
+/** The first request of the day for a district searches the web; later ones read the cache. */
+const NEWS_TIMEOUT_MS = 45_000
 
 /**
  * A free-plan API host sleeps when idle and needs up to a minute to wake. The first request of a
@@ -108,7 +113,7 @@ async function request<T>(method: string, path: string, opts: RequestOptions = {
   if (path !== '/health') await wakeApi()
   const isAi = path.startsWith('/ai/')
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), isAi ? AI_TIMEOUT_MS : DEFAULT_TIMEOUT_MS)
+  const timer = setTimeout(() => controller.abort(), isAi ? AI_TIMEOUT_MS : path === '/news' ? NEWS_TIMEOUT_MS : DEFAULT_TIMEOUT_MS)
 
   const headers: Record<string, string> = { ...(await authHeader()) }
   let body: BodyInit | undefined
@@ -175,6 +180,13 @@ export const api = {
   deleteFarmer: () => request<DeleteResult>('DELETE', '/farmer/me'),
 
   getBrief: (lang: Lang) => request<Brief>('GET', '/brief', { query: { lang } }),
+  /** today's official farm news for the farmer's district */
+  getNews: (lang: Lang) => request<DistrictNews>('GET', '/news', { query: { lang } }),
+
+  /** whether the signed-in user may open the founder dashboard (about the caller only) */
+  getAdminAccess: () => request<AdminAccess>('GET', '/admin/access'),
+  /** founder dashboard data; 403 for anyone not on ARTH_ADMIN_EMAILS */
+  getAdminOverview: () => request<AdminOverview>('GET', '/admin/overview'),
 
   getWeather: (lat: number, lon: number, lang: Lang) =>
     request<Weather>('GET', '/weather', { query: { lat, lon, lang } }),

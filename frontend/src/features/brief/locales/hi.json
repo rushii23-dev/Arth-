@@ -41,5 +41,14 @@
     "rainToday": "आज {{p}}% बारिश",
     "noWeather": "मौसम का अनुमान आते ही यहाँ दिखेगा।"
   },
-  "seasons": { "kharif": "खरीफ", "rabi": "रबी", "zaid": "ज़ायद" }
+  "seasons": { "kharif": "खरीफ", "rabi": "रबी", "zaid": "ज़ायद" },
+  "news": {
+    "title": "{{district}} की ख़बरें",
+    "titleNoDistrict": "आज की खेती की ख़बरें",
+    "official": "सिर्फ़ सरकारी स्रोत: IMD, कृषि विभाग, ICAR",
+    "loading": "आज की सरकारी सूचनाएँ खोज रहे हैं",
+    "empty": "आज {{district}} के लिए कोई नई सरकारी सूचना नहीं है।",
+    "emptyNoDistrict": "आज कोई नई सरकारी सूचना नहीं है।",
+    "a11y": "{{headline}}. {{source}}, {{date}}. सरकारी पेज खुलेगा।"
+  }
 }

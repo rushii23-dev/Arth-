@@ -23,6 +23,7 @@ import { FieldCropCard } from '@/features/calendar/FieldCropCard'
 import { useSpeech } from './useSpeech'
 import { NoVoiceHint } from '@/components/voice'
 import { TodayHero } from './TodayHero'
+import { NewsCard } from './NewsCard'
 
 /**
  * Home — "Aaj Ka Kaam". One look answers "what do I do on my farm today?":
@@ -350,6 +351,7 @@ export default function BriefPage() {
   const { lang } = useLang()
   const q = useQuery({ queryKey: qk.brief(lang), queryFn: () => api.getBrief(lang) })
   const brief = q.data
+  const district = useFarmer().data?.district
 
   return (
     <>
@@ -369,7 +371,10 @@ export default function BriefPage() {
           <EscalateCard />
         </div>
       ) : (
-        <BriefBody brief={brief} />
+        <>
+          <BriefBody brief={brief} />
+          <NewsCard district={district} />
+        </>
       )}
 
       <SectionHead>{t('tools')}</SectionHead>

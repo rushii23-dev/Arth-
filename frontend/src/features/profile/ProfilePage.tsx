@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button, EmptyState, ErrorState, Skeleton } from '@/components/ui'
-import { isNotFound, useFarmer } from '@/lib/api/queries'
+import { isNotFound, useFarmer, useIsAdmin } from '@/lib/api/queries'
 import { useAuth } from '@/features/auth/useAuth'
 import { useOnline } from './profileData'
 import { PIcon, Row, RowGroup, Section } from './parts'
@@ -55,6 +55,7 @@ export default function ProfilePage() {
   const nav = useNavigate()
   const { email } = useAuth()
   const farmer = useFarmer()
+  const isAdmin = useIsAdmin()
   const editCore = () => nav('/onboarding?edit=1')
 
   if (farmer.isPending) return <ProfileSkeleton />
@@ -102,6 +103,7 @@ export default function ProfilePage() {
         <RowGroup>
           <Row icon="settings" tint="neutral" label={t('settings.title')} sub={t('settings.rowSub')} onClick={() => nav('/settings')} />
           <Row icon="phone" tint="grow" label={t('help.kccTitle')} sub={t('help.kccBody')} href="tel:18001801551" chevron={false} />
+          {isAdmin ? <Row icon="mandi" tint="neutral" label={t('admin.row')} sub={t('admin.rowSub')} onClick={() => nav('/admin')} /> : null}
         </RowGroup>
       </div>
     </>

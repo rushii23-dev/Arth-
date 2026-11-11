@@ -41,5 +41,14 @@
     "rainToday": "{{p}}% rain today",
     "noWeather": "Weather will show here when the forecast loads."
   },
-  "seasons": { "kharif": "Kharif", "rabi": "Rabi", "zaid": "Summer" }
+  "seasons": { "kharif": "Kharif", "rabi": "Rabi", "zaid": "Summer" },
+  "news": {
+    "title": "News for {{district}}",
+    "titleNoDistrict": "Farm news today",
+    "official": "Only official sources: IMD, Krishi Vibhag, ICAR",
+    "loading": "Finding today’s official notices",
+    "empty": "No new official notices for {{district}} today.",
+    "emptyNoDistrict": "No new official notices today.",
+    "a11y": "{{headline}}. {{source}}, {{date}}. Opens the official page."
+  }
 }

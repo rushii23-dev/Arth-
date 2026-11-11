@@ -22,6 +22,9 @@ export const queryClient = new QueryClient({
 export const qk = {
   farmer: ['farmer'] as const,
   brief: (lang: string) => ['brief', lang] as const,
+  news: (lang: string) => ['news', lang] as const,
+  adminAccess: ['admin', 'access'] as const,
+  adminOverview: ['admin', 'overview'] as const,
   weather: (lat: number, lon: number, lang: string) => ['weather', lat, lon, lang] as const,
   mandiPrices: (commodity: string, lat: number, lon: number) => ['mandi', commodity, lat, lon] as const,
   calendar: (season: string, lang: string) => ['calendar', season, lang] as const,
@@ -56,9 +59,15 @@ export function useCloudSync() {
   return q.data?.cloudSync === true
 }
 
+/** Whether this user may open the founder dashboard. False until known, and on any error. */
+export function useIsAdmin() {
+  const q = useQuery({ queryKey: qk.adminAccess, queryFn: api.getAdminAccess, staleTime: 30 * 60_000, retry: false })
+  return q.data?.admin === true
+}
+
 /** Strip server-owned fields before a PUT. */
 export function toInput(p: FarmerProfile): FarmerProfileInput {
-  const { createdAt: _c, updatedAt: _u, ...rest } = p
+  const { createdAt: _c, updatedAt: _u, lastSeenAt: _l, ...rest } = p
   return rest
 }
 

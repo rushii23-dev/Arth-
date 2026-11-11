@@ -19,6 +19,7 @@ const KagazPage = lazy(() => import('@/features/kagaz/KagazPage'))
 const MandiPage = lazy(() => import('@/features/mandi/MandiPage'))
 const CalendarPage = lazy(() => import('@/features/calendar/CalendarPage'))
 const SchemesPage = lazy(() => import('@/features/schemes/SchemesPage'))
+const AdminPage = lazy(() => import('@/features/admin/AdminPage'))
 
 function Root() {
   return (
@@ -81,6 +82,8 @@ export const router = createBrowserRouter([
           { path: '/schemes', element: <SchemesPage /> },
           { path: '/profile', element: <ProfilePage /> },
           { path: '/settings', element: <SettingsPage /> },
+          // the founder dashboard: linked only for admins; the page and the API both check
+          { path: '/admin', element: <AdminPage /> },
         ],
       },
       { path: '*', element: <Navigate to="/" replace /> },

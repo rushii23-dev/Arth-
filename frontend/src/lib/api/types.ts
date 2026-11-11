@@ -45,9 +45,62 @@ export interface FarmerProfile {
   onboardedVersion?: number
   createdAt?: string
   updatedAt?: string
+  /** server-owned: when the farmer last opened Home */
+  lastSeenAt?: string
 }
 
-export type FarmerProfileInput = Omit<FarmerProfile, 'createdAt' | 'updatedAt' | 'soilType'> & { soilType?: SoilType }
+export type FarmerProfileInput = Omit<FarmerProfile, 'createdAt' | 'updatedAt' | 'lastSeenAt' | 'soilType'> & { soilType?: SoilType }
+
+// ---- District news (official sources only) -------------------------------
+
+export interface NewsItem {
+  headline: string
+  summary: string
+  /** the official body, e.g. "IMD Pune", "Krishi Vibhag" */
+  source: string
+  /** an official page (*.gov.in, *.nic.in, ICAR) the search really returned */
+  url: string
+  date: string
+}
+
+export interface DistrictNews {
+  district: string
+  date: string
+  items: NewsItem[]
+  model: string | null
+}
+
+// ---- Founder dashboard (admins only) --------------------------------------
+
+export interface AdminAccess {
+  admin: boolean
+}
+
+export interface AdminCount {
+  key: string
+  count: number
+}
+
+export interface AdminFarmer {
+  name: string
+  village: string
+  district: string
+  crops: string[]
+  lang: string
+  signedUpAt: string | null
+  lastSeenAt: string | null
+}
+
+export interface AdminOverview {
+  generatedAt: string
+  today: string
+  totals: { farmers: number; signupsToday: number; signups7d: number; activeToday: number; active7d: number; inactive7d: number }
+  byDistrict: AdminCount[]
+  byCrop: AdminCount[]
+  byLang: AdminCount[]
+  recent: AdminFarmer[]
+  inactive: AdminFarmer[]
+}
 
 export interface DeleteResult {
   deleted: true

@@ -302,5 +302,6 @@
     "medium": "Medium",
     "high": "High",
     "source": "Soil Health Card dashboard"
-  }
+  },
+  "admin": {"row": "Founder dashboard", "rowSub": "Signups, districts and crops (Arth team)"}
 }

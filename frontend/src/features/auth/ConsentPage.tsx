@@ -53,6 +53,7 @@ export default function ConsentPage() {
         <ul className="mt-1">
           <Row icon="profile" tone="grow" text={t('storeProfile')} />
           <Row icon="lock" tone="grow" text={t('storeHistory')} />
+          <Row icon="shield" tone="grow" text={t('teamSees')} />
         </ul>
       </div>
 
