@@ -135,6 +135,84 @@ const RULES: Rule[] = [
       },
     }),
   ),
+  {
+    // Magel Tyala Saur Krushi Pump (MSEDCL): pump size by land, up to 2.5 / 5 / above 5 acres
+    id: 'saur-pump',
+    url: 'https://www.mahadiscom.in/solar_MTSKPY/',
+    docs: ['aadhaar', 'bank', 'land'],
+    check: (a) => ({
+      eligible: a.ownsLand,
+      why: [
+        [landOwner(a)],
+        ...(a.ownsLand
+          ? [
+              ['scheme.why.pumpSize', { hp: a.landAcres <= 2.5 ? '3' : a.landAcres <= 5 ? '5' : '7.5' }] as [string, Record<string, string>],
+              ['scheme.why.waterSource'] as [string],
+            ]
+          : []),
+        ...(a.ownsLand && (a.category === 'sc' || a.category === 'st') ? [['scheme.why.lowerShare'] as [string]] : []),
+        ...needs(a),
+      ],
+    }),
+  },
+  {
+    // Mukhyamantri Shashwat Krishi Sinchan Yojana: farm ponds on demand; about 0.40 ha minimum (less in Konkan)
+    id: 'shettale',
+    url: 'https://mahadbt.maharashtra.gov.in',
+    docs: ['aadhaar', 'bank', 'land'],
+    check: (a) => {
+      const landFits = a.ownsLand && a.landAcres >= 1
+      return {
+        eligible: landFits,
+        why: [
+          [a.ownsLand ? (landFits ? 'scheme.why.pondLandFits' : 'scheme.why.pondLand') : 'scheme.why.noLand'],
+          ...(a.irrigation === 'rainfed' ? [['scheme.why.storesRain'] as [string]] : []),
+          ...needs(a),
+        ],
+      }
+    },
+  },
+  {
+    id: 'fundkar-phalbag',
+    url: 'https://mahadbt.maharashtra.gov.in',
+    docs: ['aadhaar', 'bank', 'land'],
+    check: (a) => ({ eligible: a.ownsLand, why: [[landOwner(a)], ['scheme.why.newOrchard'], ...needs(a)] }),
+  },
+  {
+    id: 'midh',
+    url: 'https://midh.gov.in',
+    docs: ['aadhaar', 'bank', 'land', 'quotation'],
+    check: (a) => ({ eligible: a.ownsLand, why: [[landOwner(a)], ['scheme.why.horticulture'], ...needs(a)] }),
+  },
+  {
+    // PM Kisan Maandhan: pension for small and marginal farmers who join at 18 to 40
+    id: 'pm-kmy',
+    url: 'https://maandhan.in',
+    docs: ['aadhaar', 'bank', 'land'],
+    check: (a) => ({
+      eligible: a.ownsLand && a.landAcres <= SMALL_FARM_ACRES && !a.incomeTaxPayer,
+      why: [
+        [a.ownsLand ? 'scheme.why.smallFarmOnly' : 'scheme.why.noLand'],
+        ['scheme.why.ageMaandhan'],
+        ...(a.incomeTaxPayer ? [['scheme.why.taxPayer'] as [string]] : []),
+        ...needs(a),
+      ],
+    }),
+  },
+  {
+    // Gopinath Munde Shetkari Apghat Suraksha Sanugrah Anudan: accident grant, no premium
+    id: 'gopinath-munde',
+    url: 'https://krishi.maharashtra.gov.in',
+    docs: ['aadhaar', 'bank', 'land'],
+    check: (a) => ({ eligible: a.ownsLand, why: [[a.ownsLand ? 'scheme.why.accidentCover' : 'scheme.why.accidentNoLand']] }),
+  },
+  {
+    // Restructured Weather Based Crop Insurance: Maharashtra's fruit crop insurance, on the PMFBY portal
+    id: 'rwbcis',
+    url: 'https://pmfby.gov.in',
+    docs: ['aadhaar', 'bank', 'land', 'sowing'],
+    check: (a) => ({ eligible: true, why: [['scheme.why.fruitGrowers'], ...needs(a)] }),
+  },
 ]
 
 export const SCHEME_IDS = RULES.map((r) => r.id)

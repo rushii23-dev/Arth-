@@ -103,7 +103,10 @@ describe('schemes', () => {
   const ids = (a: SchemeAnswers, eligible = true) => matchSchemes(a, 'en').filter((s) => s.eligible === eligible).map((s) => s.id)
 
   it('a small SC farmer with land qualifies for the central schemes and Ambedkar, not Birsa Munda', () => {
-    expect(ids(small)).toEqual(['pm-kisan', 'namo-shetkari', 'pmfby', 'kcc', 'soil-health-card', 'pmksy', 'mahadbt-farm-mech', 'ambedkar'])
+    expect(ids(small)).toEqual([
+      'pm-kisan', 'namo-shetkari', 'pmfby', 'kcc', 'soil-health-card', 'pmksy', 'mahadbt-farm-mech', 'ambedkar',
+      'saur-pump', 'shettale', 'fundkar-phalbag', 'midh', 'pm-kmy', 'gopinath-munde', 'rwbcis',
+    ])
     expect(ids(small, false)).toEqual(['birsa-munda'])
   })
 
@@ -121,14 +124,25 @@ describe('schemes', () => {
 
   it('without land: insurance, loans and soil testing, not PM-KISAN', () => {
     const none = { ...small, ownsLand: false, category: 'general' as const }
-    expect(ids(none)).toEqual(['pmfby', 'kcc', 'soil-health-card'])
+    expect(ids(none)).toEqual(['pmfby', 'kcc', 'soil-health-card', 'rwbcis'])
+  })
+
+  it('solar pump size, farm pond land and the pension follow the land', () => {
+    const pump = (landAcres: number) => matchSchemes({ ...small, landAcres }, 'en').find((s) => s.id === 'saur-pump')!.reasons
+    expect(pump(2.5)).toContain('With your land you can get a 3 HP pump.')
+    expect(pump(4)).toContain('With your land you can get a 5 HP pump.')
+    expect(pump(8)).toContain('With your land you can get a 7.5 HP pump.')
+    expect(pump(2)).toContain('SC and ST farmers pay a smaller share.')
+    expect(ids({ ...small, landAcres: 0.5 }, false)).toContain('shettale')
+    expect(ids({ ...small, landAcres: 8 }, false)).toContain('pm-kmy')
+    expect(ids({ ...small, incomeTaxPayer: true }, false)).toContain('pm-kmy')
   })
 
   it('POST /schemes/match validates and answers in Hindi', async () => {
     const { send } = setup()
     const res = await send('POST', '/schemes/match', { answers: small, lang: 'hi' })
     expect(res.status).toBe(200)
-    expect((await res.json()).schemes).toHaveLength(9)
+    expect((await res.json()).schemes).toHaveLength(16)
     expect((await send('POST', '/schemes/match', { answers: { ownsLand: true } })).status).toBe(422)
   })
 

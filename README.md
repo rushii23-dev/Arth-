@@ -168,7 +168,10 @@ against the live feed) and [`frontend/src/lib/crops.ts`](frontend/src/lib/crops.
 
 [`services/schemes.ts`](backend/src/services/schemes.ts) checks the farmer's answers against:
 PM-KISAN · Namo Shetkari Mahasanman Nidhi · PM Fasal Bima Yojana · Kisan Credit Card ·
-Soil Health Card · PMKSY Per Drop More Crop · MahaDBT farm mechanisation.
+Soil Health Card · PMKSY Per Drop More Crop · MahaDBT farm mechanisation · Dr. Babasaheb Ambedkar
+Krishi Swavalamban · Birsa Munda Krishi Kranti · Magel Tyala Saur Krushi Pump · Magel Tyala Shettale ·
+Bhausaheb Fundkar Phalbag Lagvad · MIDH horticulture · PM Kisan Maandhan · Gopinath Munde Shetkari
+Apghat Suraksha Sanugrah Anudan · weather-based fruit crop insurance (16 in all).
 Every result says **why**, the benefit, the documents to carry and the official link. Rules are
 simplified; the app asks the farmer to confirm on the official site.
 
