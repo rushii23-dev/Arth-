@@ -17,9 +17,10 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](frontend/)
 [![Node](https://img.shields.io/badge/Node.js-Hono-339933?style=flat-square&logo=nodedotjs&logoColor=white)](backend/)
 [![Gemma 4](https://img.shields.io/badge/AI-Gemma_4_·_Gemini_2.5_Flash-ff6f00?style=flat-square)](https://ai.google.dev/gemma)
-[![Google Cloud](https://img.shields.io/badge/Google_Cloud-Cloud_Run_·_Firestore_·_Firebase-4285F4?style=flat-square&logo=googlecloud&logoColor=white)](scripts/deploy.ps1)
+[![Firebase](https://img.shields.io/badge/Google-Firebase_Auth_·_Firestore-4285F4?style=flat-square&logo=firebase&logoColor=white)](firestore.rules)
+[![API](https://img.shields.io/badge/API-Vercel_Mumbai_·_Cloud_Run_ready-000000?style=flat-square&logo=vercel&logoColor=white)](backend/vercel.json)
 [![Android](https://img.shields.io/badge/Android-Capacitor-3DDC84?style=flat-square&logo=android&logoColor=white)](docs/ANDROID.md)
-[![Tests](https://img.shields.io/badge/Backend_tests-92_passing-brightgreen?style=flat-square)](backend/test/)
+[![Tests](https://img.shields.io/badge/Backend_tests-112_passing-brightgreen?style=flat-square)](backend/test/)
 
 </div>
 
@@ -55,17 +56,19 @@ data: after Google sign-in, everything on screen comes from live sources.
 | Screen | What it does | Where the answer comes from |
 | :--- | :--- | :--- |
 | 🔐 **Sign in** | Dawn over the hills, the wordmark, a tagline in three languages, then **Sign in with Google**, the only way in. | Firebase Auth |
-| 📝 **Onboarding** | Six questions: language, name, place, crops, land, water. Soil is never asked; it comes from the district. Crops: 10 main tiles plus **Other crops** (38 more, searchable in any language) and crops the farmer types in. | Location → district |
-| 🏠 **Home: Aaj Ka Kaam** | The sky now, how far into the season we are, the **single most important job today** in big type, where each crop usually stands this week, 4-day weather and price moves. One button reads it all aloud. | Open-Meteo · Agmarknet · crop calendar |
+| ✅ **Consent** | What Arth keeps, what it never keeps (photos, voice, Aadhaar or bank numbers), and that the Arth team can see the profile only to help the farmer. | — |
+| 📝 **Onboarding** | Six questions: language, name, place, crops, land, water. Soil is never asked; it comes from the district. Crops: 10 main tiles plus **Other crops** (38 more, searchable in any language) and crops the farmer types in. Ends with a welcome screen. | Location → district |
+| 🏠 **Home: Aaj Ka Kaam** | The sky now, how far into the season we are, the **single most important job today** in big type, where each crop usually stands this week, 4-day weather, price moves and **farm news for the district from official sources only**. One button reads it all aloud. | Open-Meteo · Agmarknet · crop calendar · Gemini + Google Search |
 | 🌦️ **Weather** | Now, 7 days and advisories such as *"Don't spray tomorrow: 80 % rain"*. | Open-Meteo + fixed thresholds |
 | 📈 **Mandi & Sell Smart** | Nearby APMC prices, a 30-day trend, and *sell now or wait* after the cost of trucking to each market. | Agmarknet + code |
 | 🩺 **Crop Doctor** | Photo of a sick leaf → the problem, severity, organic and chemical remedies, prevention. Unsure → *"not sure"* and the Kisan Call Centre. | Gemma 4 vision picks; checked advice from our data |
 | 🏷️ **Label Reader** | Photo of a pesticide label → the dose for *this farmer's* sprayer tank, waiting period, safety. **Never guesses a dose.** | Gemma 4 reads · code calculates |
 | 📄 **Kagaz Samjho** | Photo of a government or bank paper → plain-language summary, deadlines, next steps, with Aadhaar, PAN, bank and phone numbers masked. | Gemma 4 + PII masking |
 | 📅 **Crop calendar** | A year map of the farm, what is in the field now, which crops can be sown **today** (days left) and which windows open soon, each with a *why now*. | Crop calendars + live weather and prices |
-| 🏛️ **Schemes** | One question per screen → the central and Maharashtra schemes he qualifies for, why, and which documents to carry. | Rules engine (no AI) |
+| 🏛️ **Schemes** | One question per screen → which of 16 central and Maharashtra schemes he qualifies for, why, and which documents to carry. | Rules engine (no AI) |
 | 🎙️ **Voice** | Ask anything by voice from any screen; Arth answers aloud and can open the right screen. | Gemini 2.5 Flash (audio in) |
-| 👤 **Profile & Settings** | Farm, district soil, language, sprayer tank, alerts, privacy, delete account. | Profile |
+| 👤 **Profile & Settings** | Farm, district soil, language, sprayer tank, alerts, privacy, delete account, and **How to use Arth**: a 7-step guide, one screen at a time. | Profile |
+| 📊 **Founder dashboard** | Admins only: sign-ups, who opened the app today and this week, farmers by district, crop and language, and who has gone quiet. | Firestore (no UID, email or location shown) |
 
 ---
 
@@ -178,6 +181,30 @@ simplified; the app asks the farmer to confirm on the official site.
 </details>
 
 <details>
+<summary><b>📰 District news: official sources or nothing</b></summary>
+<br>
+
+[`services/news.ts`](backend/src/services/news.ts) asks **Gemini 2.5 Flash with Google Search grounding**
+once per district per day for that day's farm news (IMD warnings and agromet advisories, scheme
+deadlines, APMC notices, Krishi Vibhag and ICAR advisories), in English, Hindi and Marathi at once.
+An item is kept only when its link is a page the search actually returned, on an official host
+(`*.gov.in`, `*.nic.in`, ICAR, Maharashtra's agricultural universities). The day's answer, even
+empty, is cached in Firestore, so 36 districts cost at most 36 grounded calls a day. The model sees
+only the district and the date.
+
+</details>
+
+<details>
+<summary><b>📊 Founder dashboard</b></summary>
+<br>
+
+[`routes/admin.ts`](backend/src/routes/admin.ts): admins are verified Google sign-in emails listed
+in `ARTH_ADMIN_EMAILS`. The dashboard shows totals, sign-ups, active and quiet farmers, and counts by
+district, crop and language. It never returns a user ID, email or coordinates, and is not cached.
+
+</details>
+
+<details>
 <summary><b>🎙️ Voice-first, in three languages</b></summary>
 <br>
 
@@ -203,41 +230,48 @@ flowchart TD
 
     subgraph Firebase["🔥 Firebase"]
         Auth["Authentication<br/>Google sign-in"]
-        Host["Hosting<br/>web app on Google's CDN, /api → Cloud Run"]
     end
 
-    subgraph Run["☁️ Cloud Run, asia-south1 (Node.js + Hono)"]
-        MW["Token check · CORS · secure headers · 6 MB limit · AI rate limit"]
-        Rules["Brief · calendar · weather rules · Sell Smart · schemes · dose maths"]
-        AIsvc["Crop Doctor · Label Reader · Kagaz · Voice<br/>schema-validated JSON, PII masking"]
+    subgraph Run["☁️ Arth API, Node.js + Hono<br/>today: Vercel, Mumbai (bom1) · ready: Cloud Run, asia-south1"]
+        MW["Token check · CORS · secure headers · 6 MB limit · 6 AI calls a minute per user"]
+        Rules["Brief · calendar · weather rules · Sell Smart · 16 schemes · dose maths"]
+        AIsvc["Crop Doctor · Label Reader · Kagaz · Voice · district news<br/>schema-validated JSON, PII masking"]
+        Admin["Founder dashboard (admins only)"]
     end
 
-    subgraph Google["🧠 Google AI"]
+    subgraph Google["🧠 Google AI · Gemini API"]
         Gemma["Gemma 4 (gemma-4-26b-a4b-it)<br/>vision"]
-        Flash["Gemini 2.5 Flash<br/>audio in"]
+        Flash["Gemini 2.5 Flash<br/>audio in · Google Search grounding"]
     end
 
     subgraph Data["🗄️ Data"]
-        FS[("Firestore<br/>profiles · mandi snapshots · anonymous scheme interest")]
-        SM["Secret Manager<br/>Gemini and data.gov.in keys"]
+        FS[("Firestore<br/>profiles · mandi snapshots · daily district news · anonymous scheme interest")]
         OM["Open-Meteo forecast"]
         AG["Agmarknet via data.gov.in"]
     end
 
     UI --> Auth
-    UI --> Host --> MW
+    UI --> MW
     Cam --> MW
-    MW --> Rules & AIsvc
+    MW --> Rules & AIsvc & Admin
     AIsvc --> Gemma & Flash
     Rules --> OM & AG & FS
-    MW --> FS
-    Run -.-> SM
+    AIsvc --> FS
+    Admin --> FS
 ```
 
 The same React build runs as a PWA and, through Capacitor, as the Android app
-([docs/ANDROID.md](docs/ANDROID.md)). [`scripts/deploy.ps1`](scripts/deploy.ps1) deploys
+([docs/ANDROID.md](docs/ANDROID.md)).
+
+**Where it runs today:** the API is on **Vercel in Mumbai** ([`backend/vercel.json`](backend/vercel.json),
+entry [`backend/api/index.ts`](backend/api/index.ts)), with Firestore and Firebase Auth on Google
+Cloud; keys live in Vercel's environment variables. Sign-in tokens are checked with `jose` against
+Google's public keys. The Android app calls this API directly.
+
+**Google Cloud Run, on Buildathon credits:** [`scripts/deploy.ps1`](scripts/deploy.ps1) deploys
 everything with one command: it stores the keys in Secret Manager, builds and deploys the API to
-Cloud Run (scales from zero, up to 3 instances), and publishes the web app and Firestore rules.
+Cloud Run in `asia-south1` (scales from zero, up to 3 instances), and publishes the web app on
+Firebase Hosting with `/api` routed to Cloud Run, plus the Firestore rules.
 
 ---
 
@@ -250,6 +284,8 @@ Cloud Run (scales from zero, up to 3 instances), and publishes the web app and F
 | District soil type | Maharashtra state soil map (black, red, laterite, alluvial) | per district, farmer can correct it |
 | Crop stages and sowing windows | Maharashtra crop calendars for the 10 core crops | reviewed by hand |
 | Crop problems and remedies | 38 checked conditions in English, Hindi and Marathi | reviewed by hand |
+| District farm news | Gemini 2.5 Flash with Google Search grounding, official hosts only | once a day per district, cached in Firestore |
+| Government schemes | 16 central and Maharashtra schemes, simplified rules | reviewed by hand; the farmer confirms on the official site |
 | Photo, label, document, voice | Gemma 4 and Gemini 2.5 Flash via the Gemini API | per request, never stored |
 
 ---
@@ -265,7 +301,8 @@ Cloud Run (scales from zero, up to 3 instances), and publishes the web app and F
 | 5 | **Location is rounded to ~1 km** | Two decimals, on the phone and on the server. |
 | 6 | **Delete means delete** | Deleting the account removes the profile from Firestore. |
 | 7 | **Anonymous, opt-in insights only** | A farmer can share interest in a scheme: scheme, district, crop, land band, language and day. No name or ID. |
-| 8 | **Locked-down web layer** | Strict CSP, `X-Frame-Options: DENY`, 6 MB upload limit, 6 AI calls a minute per user, keys only in Secret Manager. |
+| 8 | **Said plainly at consent** | The consent screen says the Arth team can see the profile, only to help the farmer. The founder dashboard never shows a user ID, email or location. |
+| 9 | **Locked-down web layer** | Strict CSP, `X-Frame-Options: DENY`, 6 MB upload limit, 6 AI calls a minute per user, keys only in the host's secret store (Vercel environment variables today, Secret Manager on Cloud Run). |
 
 ---
 
@@ -298,7 +335,14 @@ npm run dev
 
 Open <http://localhost:5173>, choose a language and **Sign in with Google**.
 
+Optional backend settings: `ARTH_ADMIN_EMAILS` (comma-separated Google emails that may open the
+founder dashboard) and `ARTH_NEWS_MODEL` (default `gemini-2.5-flash`).
+
 **Android:** see [docs/ANDROID.md](docs/ANDROID.md) (Capacitor, Firebase setup, building and installing the APK).
+
+**Vercel (today):** import the repo with `backend` as the project root; set the variables from
+`backend/.env.example` (with `ARTH_STORE=firestore` and `ARTH_FIREBASE_SERVICE_ACCOUNT`) in the
+Vercel dashboard. Every push to `main` deploys.
 
 **Google Cloud:** `powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1` (needs the gcloud
 and firebase CLIs and billing or credits on the project).
@@ -321,6 +365,9 @@ camelCase, money is whole ₹, prices are ₹/quintal. Errors look like `{ "erro
 | `POST` | `/mandi/sell-advice` | Sell now or wait, after transport, with every option. |
 | `POST` | `/ai/crop-doctor` · `/ai/label-reader` · `/ai/explain-document` · `/ai/voice` | AI results (multipart). |
 | `POST` | `/schemes/match` · `/schemes/share` | Eligible schemes with reasons; opt-in anonymous interest. |
+| `GET` | `/news?lang=` | Today's official farm news for the farmer's district (0–4 items). |
+| `GET` | `/admin/access` · `/admin/overview` | Whether the caller is an admin; the founder dashboard (admins only). |
+| `GET` | `/health` | Open, no sign-in: model status; `?upstreams` checks weather and mandi sources. |
 
 ---
 
@@ -333,20 +380,21 @@ Arth/
 │   └── src/
 │       ├── app/               router, layout, bottom nav, mic
 │       ├── features/          auth, onboarding, brief, weather, mandi, doctor, label,
-│       │                      kagaz, calendar, schemes, profile
+│       │                      kagaz, calendar, schemes, profile, admin
 │       ├── components/        shared UI, voice (listen and read aloud)
 │       ├── lib/               API client, Firebase, crop catalog
 │       └── i18n/              en / hi / mr
-├── backend/                   Node.js + Hono API for Cloud Run
+├── backend/                   Node.js + Hono API (Vercel today, Cloud Run ready)
+│   ├── api/index.ts           Vercel entry
 │   ├── src/
-│   │   ├── routes/            farmer, weather + brief, plan (calendar, soil, schemes), mandi, ai
-│   │   ├── services/          brief, weather, mandi, sell, calendar, doctor, ai, pii, schemes, llm
+│   │   ├── routes/            farmer, weather + brief, plan (calendar, soil, schemes), mandi, ai, news, admin
+│   │   ├── services/          brief, weather, mandi, sell, calendar, doctor, ai, pii, schemes, news, llm
 │   │   ├── data/              crops, crop calendars, crop conditions, districts, soils, texts (en/hi/mr)
 │   │   └── store/             Firestore (production) and memory (development)
-│   └── test/                  92 tests, no network or model needed
+│   └── test/                  112 tests, no network or model needed
 ├── scripts/deploy.ps1         one-command deploy to Google Cloud
 ├── firebase.json              Hosting, /api rewrite to Cloud Run, security headers
-└── docs/                      API contract (SPEC.md), Android guide
+└── docs/                      API contract (SPEC.md), Android guide, field test, demo video
 ```
 
 ---
@@ -356,7 +404,7 @@ Arth/
 ```bash
 cd backend
 npm run typecheck
-npm test            # 92 tests: rules, dose, PII, crop doctor, crops, mandi, sell, calendar, API contract
+npm test            # 112 tests: rules, dose, PII, crop doctor, crops, mandi, sell, calendar, schemes, news, admin, sign-in, API contract
 
 cd ../frontend
 npm run lint
@@ -372,9 +420,12 @@ External services and the models are faked, so the backend suite runs offline in
 | Component | Role in Arth | License |
 | :--- | :--- | :--- |
 | **[Gemma 4](https://ai.google.dev/gemma)** via the Gemini API | Vision: leaf, label, document; schema-validated JSON | Gemma terms (open weights) |
-| **[Gemini 2.5 Flash](https://ai.google.dev)** | Voice: audio in, answer and navigation out | Google API terms |
-| **Google Cloud**: Cloud Run, Cloud Build, Firestore, Secret Manager | Hosting the API and data | Google Cloud terms |
-| **Firebase**: Authentication, Hosting | Google sign-in, web app | Google service terms |
+| **[Gemini 2.5 Flash](https://ai.google.dev)** | Voice: audio in, answer and navigation out; district news with Google Search grounding | Google API terms |
+| **Google AI Studio** | The Gemini API project and key | Google API terms |
+| **Google Antigravity · Google Agent Skills** | Used to build Arth | Google terms |
+| **Google Cloud**: Firestore today; Cloud Run, Cloud Build, Secret Manager on Buildathon credits | Data now; hosting the API next | Google Cloud terms |
+| **Firebase**: Authentication (Hosting ready) | Google sign-in, web app | Google service terms |
+| **Vercel** (Mumbai) | Hosting the API today | Vercel terms |
 | **Web Speech API** | Reading answers aloud | Browser / OS built-in |
 | **React 19 · Vite · Tailwind v4 · TanStack Query · i18next · Recharts · Capacitor** | Frontend and Android | MIT |
 | **Hono · Zod · firebase-admin · @google/genai** | Backend | MIT / Apache 2.0 |
