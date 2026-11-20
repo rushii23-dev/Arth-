@@ -53,7 +53,8 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,png,svg}'],
           // fonts are cached the first time a screen asks for them (below)
           globIgnores: ['**/fonts/**', 'mockServiceWorker.js'],
-          navigateFallbackDenylist: [/^\/__/, /^\/ai\//],
+          // the Android app download is served from Hosting, never answered with the SPA shell
+          navigateFallbackDenylist: [/^\/__/, /^\/ai\//, /\.apk$/],
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
           runtimeCaching: [
             {

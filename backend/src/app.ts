@@ -78,6 +78,7 @@ export function createApp({ config, store, verifyToken, forecast, mandi, llm, ai
   // SPEC §3: images ≤ 5 MB, audio ≤ 15 s; 6 MB leaves room for the multipart envelope.
   app.use('*', bodyLimit({ maxSize: 6 * 1024 * 1024, onError: (c) => errorBody(c, 413, 'too_large', 'Upload is over 5 MB') }))
   app.use('*', logRequest)
+  app.use('*', privateByDefault)
 
   // Server-to-server, keyed by the data.gov.in key itself; registered before the API so its auth never runs.
   app.route('/relay/data-gov-in', relayRoute(config.dataGovInApiKey))
@@ -94,6 +95,16 @@ export function createApp({ config, store, verifyToken, forecast, mandi, llm, ai
     return errorBody(c, 500, 'internal', 'Something went wrong')
   })
   return app
+}
+
+/**
+ * Firebase Hosting's CDN caches a Cloud Run answer that has no Cache-Control (a 404 for 10 minutes)
+ * and does not key it on the sign-in token, so one farmer's "no profile yet" sent everyone else back
+ * to onboarding. Every API answer is private and uncached unless its route says otherwise.
+ */
+const privateByDefault: Parameters<Hono['use']>[1] = async (c, next) => {
+  await next()
+  if (!c.res.headers.has('Cache-Control')) c.res.headers.set('Cache-Control', 'private, no-store')
 }
 
 /** SPEC §5.9: logs never contain bodies, tokens or PII — method, path, status and time only. */
