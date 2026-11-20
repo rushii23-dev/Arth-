@@ -17,6 +17,7 @@ import { weatherRoutes } from './routes/weather.js'
 import type { Llm } from './services/llm.js'
 import { newsService, type GroundedSearch, type ResolveLink } from './services/news.js'
 import { upstreamProbe } from './services/upstreams.js'
+import { relayRoute } from './services/relay.js'
 import type { MandiSource } from './services/mandi.js'
 import type { ForecastSource } from './services/weather.js'
 import type { Store } from './store/types.js'
@@ -35,13 +36,15 @@ export interface Deps {
   newsSearch?: GroundedSearch
   /** turns a grounding redirect link into the real page address */
   resolveLink?: ResolveLink
+  /** fetch for data.gov.in (direct, or through the relay); used by the upstream health check */
+  govFetch?: typeof fetch
 }
 
 const noSearch: GroundedSearch = async () => {
   throw new ApiError(503, 'ai_not_configured', 'AI is not set up on this server')
 }
 
-export function createApp({ config, store, verifyToken, forecast, mandi, llm, aiLimit, clock = () => new Date(), newsSearch, resolveLink }: Deps) {
+export function createApp({ config, store, verifyToken, forecast, mandi, llm, aiLimit, clock = () => new Date(), newsSearch, resolveLink, govFetch }: Deps) {
   const api = new Hono<{ Variables: AuthVars }>()
   const news = newsService({
     search: newsSearch ?? noSearch,
@@ -52,7 +55,7 @@ export function createApp({ config, store, verifyToken, forecast, mandi, llm, ai
     warn: (msg, extra) => console.log(JSON.stringify({ severity: 'WARNING', msg, ...extra })),
   })
 
-  const probe = upstreamProbe(config.dataGovInApiKey)
+  const probe = upstreamProbe(config.dataGovInApiKey, govFetch)
   api.get('/health', async (c) => {
     const health = { ok: true, model: config.model, modelReady: Boolean(config.geminiApiKey), cloudSync: true }
     // ?upstreams: can this host reach the weather and mandi sources (status codes only)
@@ -75,6 +78,9 @@ export function createApp({ config, store, verifyToken, forecast, mandi, llm, ai
   // SPEC §3: images ≤ 5 MB, audio ≤ 15 s; 6 MB leaves room for the multipart envelope.
   app.use('*', bodyLimit({ maxSize: 6 * 1024 * 1024, onError: (c) => errorBody(c, 413, 'too_large', 'Upload is over 5 MB') }))
   app.use('*', logRequest)
+
+  // Server-to-server, keyed by the data.gov.in key itself; registered before the API so its auth never runs.
+  app.route('/relay/data-gov-in', relayRoute(config.dataGovInApiKey))
 
   // The Vite dev proxy forwards /api/*; Cloud Run is called on the bare paths.
   app.route('/api', api)

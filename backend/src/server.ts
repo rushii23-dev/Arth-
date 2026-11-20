@@ -5,6 +5,7 @@ import { loadConfig } from './config.js'
 import { gemini } from './services/llm.js'
 import { geminiSearch, resolveGroundingLink } from './services/news.js'
 import { cachedMandi, dataGovIn } from './services/mandi.js'
+import { viaRelay } from './services/relay.js'
 import { cached, openMeteo } from './services/weather.js'
 import { firestoreStore } from './store/firestore.js'
 import { memoryStore } from './store/memory.js'
@@ -25,12 +26,15 @@ export function buildServer() {
   const store = config.store === 'firestore' ? firestoreStore() : memoryStore({ snapshotDir: '.data' })
   const warn = (msg: string, extra: Record<string, unknown>) =>
     console.log(JSON.stringify({ severity: 'WARNING', msg, ...extra }))
+  // data.gov.in blocks Google Cloud addresses: on Cloud Run its calls go through the Vercel deployment.
+  const govFetch = config.dataGovInRelayUrl ? viaRelay(config.dataGovInRelayUrl) : fetch
   const app = createApp({
     config,
     store,
     verifyToken: firebaseVerifier(config.firebaseProjectId),
     forecast: cached(openMeteo()),
-    mandi: cachedMandi(dataGovIn(config.dataGovInApiKey), undefined, undefined, store, warn),
+    mandi: cachedMandi(dataGovIn(config.dataGovInApiKey, govFetch), undefined, undefined, store, warn),
+    govFetch,
     llm: gemini(config.geminiApiKey),
     newsSearch: geminiSearch(config.geminiApiKey),
     resolveLink: resolveGroundingLink(),

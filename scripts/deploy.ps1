@@ -15,6 +15,7 @@
 param(
   [string]$Project = 'arth-solo-2026',
   [string]$Region = 'asia-south1',
+  [string]$Relay = 'https://arth-lovat.vercel.app',
   [ValidateSet('all', 'api', 'web')] [string]$Only = 'all'
 )
 $ErrorActionPreference = 'Stop'
@@ -25,6 +26,12 @@ $sa = "$service@$Project.iam.gserviceaccount.com"
 function Step($msg) { Write-Host "`n== $msg" -ForegroundColor Cyan }
 # Not named "Gcloud": PowerShell names ignore case, so it would call itself instead of gcloud.
 function Invoke-Gcloud { & gcloud @args --project $Project --quiet; if ($LASTEXITCODE) { throw "gcloud $($args[0..2] -join ' ') failed" } }
+# For checks that may fail on purpose ("not found"): Windows PowerShell 5.1 turns a native command's
+# stderr into a terminating error under 'Stop', so relax it here. Returns stdout; $LASTEXITCODE says if it worked.
+function Probe-Gcloud {
+  $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+  try { & gcloud @args --project $Project --quiet 2> $null } finally { $ErrorActionPreference = $old }
+}
 
 # Reads KEY=value from backend\.env without echoing it.
 function EnvValue($name) {
@@ -36,9 +43,9 @@ function EnvValue($name) {
 # Creates the secret if needed and adds a new version only when the value changed.
 function PutSecret($secret, $value) {
   if (-not $value) { throw "No value for $secret in backend\.env" }
-  & gcloud secrets describe $secret --project $Project *> $null
+  Probe-Gcloud secrets describe $secret | Out-Null
   if ($LASTEXITCODE) { Invoke-Gcloud secrets create $secret --replication-policy=automatic }
-  $current = & gcloud secrets versions access latest --secret $secret --project $Project 2> $null
+  $current = Probe-Gcloud secrets versions access latest --secret $secret
   if ($current -ne $value) {
     $tmp = New-TemporaryFile
     try {
@@ -54,7 +61,7 @@ if ($Only -in 'all', 'api') {
   Invoke-Gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com firestore.googleapis.com
 
   Step "Service account $sa (Firestore access only)"
-  & gcloud iam service-accounts describe $sa --project $Project *> $null
+  Probe-Gcloud iam service-accounts describe $sa | Out-Null
   if ($LASTEXITCODE) { Invoke-Gcloud iam service-accounts create $service --display-name 'Arth API' }
   Invoke-Gcloud projects add-iam-policy-binding $Project --member "serviceAccount:$sa" --role roles/datastore.user --condition=None | Out-Null
 
@@ -64,8 +71,12 @@ if ($Only -in 'all', 'api') {
 
   Step "Building and deploying $service to Cloud Run ($Region)"
   $origins = "https://$Project.web.app,https://$Project.firebaseapp.com,https://localhost,http://localhost:5173"
-  # ^@^ switches the list separator to @ so the comma-separated origins stay one value
-  $vars = "^@^ARTH_ENV=production@ARTH_STORE=firestore@ARTH_FIREBASE_PROJECT_ID=$Project@ARTH_CORS_ORIGINS=$origins"
+  # ^|^ switches the list separator to | so comma-separated lists (and emails) stay one value
+  $vars = "^|^ARTH_ENV=production|ARTH_STORE=firestore|ARTH_FIREBASE_PROJECT_ID=$Project|ARTH_CORS_ORIGINS=$origins"
+  # data.gov.in blocks Google Cloud addresses, so mandi calls go through the Vercel Mumbai deployment
+  if ($Relay) { $vars += "|ARTH_DATA_GOV_IN_RELAY_URL=$Relay" }
+  $admins = EnvValue 'ARTH_ADMIN_EMAILS'
+  if ($admins) { $vars += "|ARTH_ADMIN_EMAILS=$admins" }
   Invoke-Gcloud run deploy $service `
     --source (Join-Path $root 'backend') `
     --region $Region `

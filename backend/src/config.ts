@@ -11,6 +11,8 @@ export interface Config {
   /** Model for voice: hosted Gemma 4 does not list audio input. */
   audioModel: string
   dataGovInApiKey: string
+  /** Send data.gov.in calls through this Arth deployment (it blocks Google Cloud addresses); empty = direct. */
+  dataGovInRelayUrl: string
   /** Rough truck cost used in sell advice, ₹ per quintal per km. */
   transportRsPerQuintalKm: number
   /** Model for the daily district news; it must support Google Search grounding (Gemma does not). */
@@ -32,6 +34,7 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     model: e.ARTH_MODEL || 'gemma-4-26b-a4b-it',
     audioModel: e.ARTH_AUDIO_MODEL || 'gemini-2.5-flash',
     dataGovInApiKey: e.ARTH_DATA_GOV_IN_API_KEY ?? '',
+    dataGovInRelayUrl: e.ARTH_DATA_GOV_IN_RELAY_URL ?? '',
     transportRsPerQuintalKm: Number(e.ARTH_TRANSPORT_RS_PER_QUINTAL_KM ?? 2),
     newsModel: e.ARTH_NEWS_MODEL || 'gemini-2.5-flash',
     adminEmails: parseList(e.ARTH_ADMIN_EMAILS ?? '').map((x) => x.toLowerCase()),
