@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { createApp } from '../src/app.js'
 import { loadConfig } from '../src/config.js'
 import { addDays } from '../src/lib/time.js'
-import { analyse, cachedMandi, changePct, dataGovIn, slopePerDay, type PriceRecord } from '../src/services/mandi.js'
+import { analyse, cachedMandi, changePct, dataGovIn, marketPoint, slopePerDay, type PriceRecord } from '../src/services/mandi.js'
+import { canonicalDistrict } from '../src/data/districts.js'
+import { MARKET_POINTS } from '../src/data/markets.js'
 import { sellAdvice } from '../src/services/sell.js'
 import type { Forecast } from '../src/services/weather.js'
 import { memoryStore } from '../src/store/memory.js'
@@ -212,5 +214,38 @@ describe('mandi routes and brief alerts', () => {
     const b = await (await app.request('/brief', { headers: h })).json()
     expect(b.priceAlerts).toEqual([{ commodity: 'onion', market: 'Lasalgaon', modalPrice: 2980, changePct: 4.9, direction: 'up' }])
     expect(b.toolCalls.map((c: { name: string }) => c.name).sort()).toEqual(['get_mandi_prices', 'get_mandi_prices', 'get_weather'])
+  })
+})
+
+describe('market locations', () => {
+  const NASHIK_CENTRE = { lat: 20.0, lon: 73.79 }
+  const rec = (market: string, district: string, modalPrice: number): PriceRecord => ({ market, district, date: ASOF, minPrice: modalPrice, maxPrice: modalPrice, modalPrice })
+
+  it('places Agmarknet markets at their own town, not their district centre', () => {
+    // a farmer without GPS sits at the district centre: same-district markets used to be 0 km
+    const v = analyse([rec('APMC Lasalgaon', 'Nashik', 4300), rec('APMC Sinner', 'Nashik', 4200)], NASHIK_CENTRE)!
+    const km = Object.fromEntries(v.markets.map((m) => [m.market, m.distanceKm]))
+    expect(km['APMC Lasalgaon']).toBeGreaterThan(40)
+    expect(km['APMC Lasalgaon']).toBeLessThan(80)
+    expect(km['APMC Sinner']).toBeGreaterThan(10)
+  })
+
+  it('falls back to the district centre for a market it does not know', () => {
+    expect(marketPoint({ market: 'Some New Yard', district: 'Nashik' })).toEqual({ lat: 20.0, lon: 73.79 })
+  })
+
+  it('reads Agmarknet district spellings', () => {
+    expect(canonicalDistrict('Amarawati')).toBe('Amravati')
+    expect(canonicalDistrict('Chattrapati Sambhajinagar')).toBe('Chhatrapati Sambhajinagar')
+    expect(canonicalDistrict('Ahilyanagar')).toBe('Ahmednagar')
+  })
+
+  it('keeps every known market inside Maharashtra', () => {
+    for (const [key, p] of Object.entries(MARKET_POINTS)) {
+      expect(p.lat, key).toBeGreaterThan(15.5)
+      expect(p.lat, key).toBeLessThan(22.1)
+      expect(p.lon, key).toBeGreaterThan(72.5)
+      expect(p.lon, key).toBeLessThan(80.9)
+    }
   })
 })

@@ -1,5 +1,6 @@
 import { CROPS, isCrop } from '../data/crops.js'
 import { canonicalDistrict, DISTRICTS, haversineKm, ROAD_FACTOR } from '../data/districts.js'
+import { MARKET_POINTS } from '../data/markets.js'
 import { ApiError } from '../errors.js'
 import { addDays, daysBetween } from '../lib/time.js'
 import { errorCode } from './upstreams.js'
@@ -192,7 +193,13 @@ export const MAX_MARKET_KM = 300
 const CURRENT_DAYS = 10
 const MAX_MARKETS = 15
 
-function marketPoint(rec: PriceRecord) {
+/**
+ * Where a market is: its own coordinates when known (data/markets.ts), else its district's centre.
+ * With centres only, every market in the farmer's own district came out at 0 km and ₹0 transport.
+ */
+export function marketPoint(rec: { market: string; district: string }) {
+  const own = MARKET_POINTS[`${rec.market}|${rec.district}`]
+  if (own) return own
   const d = DISTRICTS[rec.district]
   return d ? { lat: d.lat, lon: d.lon } : null
 }

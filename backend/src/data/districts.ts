@@ -44,6 +44,13 @@ const ALIASES: Record<string, string> = {
   ahmadnagar: 'Ahmednagar',
   aurangabad: 'Chhatrapati Sambhajinagar',
   'chhatrapati sambhaji nagar': 'Chhatrapati Sambhajinagar',
+  // Agmarknet's own spellings (seen in its Maharashtra price history, Nov 2026)
+  'chattrapati sambhajinagar': 'Chhatrapati Sambhajinagar',
+  'chatrapati sambhajinagar': 'Chhatrapati Sambhajinagar',
+  amarawati: 'Amravati',
+  amaravati: 'Amravati',
+  nasik: 'Nashik',
+  sholapur: 'Solapur',
   osmanabad: 'Dharashiv',
   mumbai: 'Mumbai City',
   'greater mumbai': 'Mumbai City',
