@@ -20,21 +20,46 @@ const NOISE = new Set(
 
 const clean = (m: string) => m.replace(/\s+/g, ' ').trim() // same as services/mandi.ts cleanMarket
 
-/** Place names worth trying, best first: "APMC Dindori(Vani)" -> Dindori, Vani. */
-function candidates(market: string): string[] {
+/**
+ * Place names worth trying, best first: "APMC Dindori(Vani)" -> Dindori, Vani;
+ * "Shri Rameshwar Krushi Market, M.Nagar, Tal Deola, Dist Nashik" -> M Nagar, Deola (never "Nashik":
+ * the district's own name would put a private yard in the district city).
+ */
+function candidates(market: string, district: string): string[] {
   const base = market.replace(/\bAPMC\b/gi, ' ')
+  const out: string[] = []
+  const isDistrict = (s: string) => canonicalDistrict(s) === district || s.toLowerCase() === district.toLowerCase()
+  const add = (s: string, allowDistrict = false) => {
+    const t = s.replace(/[^A-Za-z\s]/g, ' ').replace(/\s+/g, ' ').trim()
+    if (t.length >= 3 && !out.includes(t) && (allowDistrict || !isDistrict(t))) out.push(t)
+  }
+  const words = (s: string) => s.split(/[\s\-,/.]+/).filter((w) => w.length >= 3 && !NOISE.has(w.toLowerCase()))
+
+  if (base.includes(',')) {
+    // "<business>, <town>, Tal <taluka>, Dist <district>": try the town, then the taluka
+    const parts = base.split(',').map((p) => p.trim()).filter((p) => p && !/^dist\b/i.test(p))
+    const towns: string[] = []
+    const talukas: string[] = []
+    for (const p of parts.slice(1)) {
+      const m = /^(.*?)\s*\btal\b\.?\s*(.*)$/i.exec(p)
+      if (m) {
+        if (m[1]) towns.push(m[1])
+        if (m[2]) talukas.push(m[2])
+      } else towns.push(p)
+    }
+    for (const t of [...towns, ...talukas]) add(words(t).join(' '))
+    for (const t of [...towns, ...talukas]) for (const w of words(t)) add(w)
+    return out.slice(0, 5)
+  }
+
   const inner = [...base.matchAll(/\(([^)]*)\)/g)].map((m) => m[1]!)
   const main = base.replace(/\([^)]*\)/g, ' ')
-  const out: string[] = []
-  const add = (s: string) => {
-    const t = s.replace(/[^A-Za-z\s]/g, ' ').replace(/\s+/g, ' ').trim()
-    if (t.length >= 3 && !out.includes(t)) out.push(t)
-  }
-  const words = (s: string) => s.split(/[\s\-,/]+/).filter((w) => w.length >= 3 && !NOISE.has(w.toLowerCase()))
-  add(words(main).join(' '))
+  const mainWords = words(main)
+  // "APMC Latur" really is in the district city; a longer name naming its district is not
+  add(mainWords.join(' '), mainWords.length === 1)
   for (const i of inner) add(words(i).join(' '))
   // long names ("... Bajar Samati- Abhona-Kalwan"): the place names are usually at the end
-  for (const w of [...words(main)].reverse()) add(w)
+  for (const w of [...mainWords].reverse()) add(w)
   for (const i of inner) for (const w of words(i)) add(w)
   return out.slice(0, 5)
 }
@@ -52,7 +77,7 @@ function spellings(name: string): string[] {
   return v.slice(0, 4)
 }
 
-type Hit = { name: string; latitude: number; longitude: number; admin1?: string; admin2?: string }
+type Hit = { name: string; latitude: number; longitude: number; admin1?: string; admin2?: string; population?: number }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 async function lookup(name: string): Promise<Hit[]> {
@@ -74,6 +99,8 @@ const PINNED: Record<string, { lat: number; lon: number; place: string }> = {
   'APMC Nasik|Nashik': { lat: 20.0, lon: 73.79, place: 'Nashik (pinned)' },
   'APMC Chattrapati Sambhajinagar|Chhatrapati Sambhajinagar': { lat: 19.88, lon: 75.34, place: 'Chhatrapati Sambhajinagar (pinned)' },
 }
+// Matched to the wrong same-named village: leave unknown (they get the district's typical distance).
+const SKIP = new Set(['Shri Rameshwar Krushi Market, M.Nagar, Tal Deola, Dist Nashik|Nashik', 'APMC Devala|Nashik'])
 const points: Record<string, { lat: number; lon: number; place: string }> = { ...PINNED }
 let found = 0
 let missed: string[] = []
@@ -85,12 +112,13 @@ for (const [m, d] of raw) {
     continue
   }
   const key = `${clean(m)}|${district}`
-  if (points[key]) continue
+  if (points[key] || SKIP.has(key)) continue
   let hit: Hit | undefined
-  for (const name of candidates(m).flatMap(spellings)) {
+  for (const name of candidates(m, district).flatMap(spellings)) {
     const results = await lookup(name)
     await sleep(120)
-    const inState = results.filter((r) => r.admin1 === 'Maharashtra')
+    // several villages share a name: prefer the biggest place (taluka towns have a population, hamlets often none)
+    const inState = results.filter((r) => r.admin1 === 'Maharashtra').sort((a, b) => (b.population ?? 0) - (a.population ?? 0))
     const km = (r: Hit) => haversineKm(centre, { lat: r.latitude, lon: r.longitude })
     // near the district centre, or (large districts) named as being in the same district
     hit =

@@ -265,3 +265,12 @@ describe('markets whose location is unknown', () => {
     expect(v.markets[0]!.distanceKm).toBeGreaterThan(80) // to the district centre
   })
 })
+
+describe('the district-city market for a farmer without GPS', () => {
+  it('is at an estimated distance, not 0 km, but a GPS farmer next to it gets the real one', () => {
+    const r: PriceRecord = { market: 'APMC Nasik', district: 'Nashik', date: ASOF, minPrice: 4100, maxPrice: 4100, modalPrice: 4100 }
+    expect(analyse([r], { lat: 20.0, lon: 73.79 })!.markets[0]!.distanceKm).toBeGreaterThan(20)
+    expect(analyse([r], { lat: 20.01, lon: 73.8 })!.markets[0]!.distanceKm).toBeGreaterThan(20) // within 2 km: still no GPS fix
+    expect(analyse([r], { lat: 20.08, lon: 74.11 })!.markets[0]!.distanceKm).toBeLessThan(50) // Niphad by GPS
+  })
+})

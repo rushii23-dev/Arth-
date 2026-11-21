@@ -229,8 +229,11 @@ export function marketKm(at: { lat: number; lon: number }, rec: { market: string
   const p = marketPoint(rec)
   if (!p) return null
   const centre = DISTRICTS[rec.district]
-  const unknownSpot = !MARKET_POINTS[`${rec.market}|${rec.district}`]
-  if (unknownSpot && centre && haversineKm(at, centre) < 2) return TYPICAL_KM[rec.district] ?? 40
+  // a farmer without GPS is placed at the district centre: a market of unknown location, or one in
+  // the district city itself, is then at an unknown distance, not 0 km
+  const farmerAtCentre = centre !== undefined && haversineKm(at, centre) < 2
+  const marketAtCentre = !MARKET_POINTS[`${rec.market}|${rec.district}`] || (centre !== undefined && haversineKm(p, centre) < 5)
+  if (farmerAtCentre && marketAtCentre) return TYPICAL_KM[rec.district] ?? 40
   return roadKm(at, p)
 }
 
