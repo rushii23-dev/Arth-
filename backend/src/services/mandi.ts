@@ -207,6 +207,33 @@ export function marketPoint(rec: { market: string; district: string }) {
 export const roadKm = (from: { lat: number; lon: number }, to: { lat: number; lon: number }) =>
   Math.round(haversineKm(from, to) * ROAD_FACTOR)
 
+/** Median road distance from each district's centre to its markets of known location. */
+const TYPICAL_KM: Record<string, number> = (() => {
+  const by: Record<string, number[]> = {}
+  for (const [key, p] of Object.entries(MARKET_POINTS)) {
+    const district = key.slice(key.lastIndexOf('|') + 1)
+    const c = DISTRICTS[district]
+    if (c) (by[district] ??= []).push(roadKm(c, p))
+  }
+  return Object.fromEntries(
+    Object.entries(by).map(([d, kms]) => [d, kms.sort((a, b) => a - b)[Math.floor(kms.length / 2)]!]),
+  )
+})()
+
+/**
+ * Road km from the farmer to a market. When the market's own location is unknown and the farmer is
+ * placed at that same district centre (no GPS), the true distance is unknown, not 0: use the
+ * district's typical market distance, like the transport cost it feeds, an estimate.
+ */
+export function marketKm(at: { lat: number; lon: number }, rec: { market: string; district: string }): number | null {
+  const p = marketPoint(rec)
+  if (!p) return null
+  const centre = DISTRICTS[rec.district]
+  const unknownSpot = !MARKET_POINTS[`${rec.market}|${rec.district}`]
+  if (unknownSpot && centre && haversineKm(at, centre) < 2) return TYPICAL_KM[rec.district] ?? 40
+  return roadKm(at, p)
+}
+
 export interface MandiView {
   asOf: string
   markets: MarketPrice[]
@@ -228,8 +255,8 @@ export function analyse(records: PriceRecord[], at: { lat: number; lon: number }
   const placed = [...latest.values()]
     .filter((r) => daysBetween(r.date, asOf) <= CURRENT_DAYS)
     .flatMap((r) => {
-      const p = marketPoint(r)
-      return p ? [{ r, km: roadKm(at, p) }] : []
+      const km = marketKm(at, r)
+      return km === null ? [] : [{ r, km }]
     })
   if (!placed.length) return null
   const near = placed.filter((m) => m.km <= MAX_MARKET_KM)

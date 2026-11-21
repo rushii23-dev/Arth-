@@ -249,3 +249,19 @@ describe('market locations', () => {
     }
   })
 })
+
+describe('markets whose location is unknown', () => {
+  const NASHIK_CENTRE = { lat: 20.0, lon: 73.79 }
+  const rec = (market: string): PriceRecord => ({ market, district: 'Nashik', date: ASOF, minPrice: 4000, maxPrice: 4000, modalPrice: 4000 })
+
+  it('are never 0 km from a farmer placed at the same district centre', () => {
+    const v = analyse([rec('Some New Yard'), rec('APMC Lasalgaon')], NASHIK_CENTRE)!
+    const unknown = v.markets.find((m) => m.market === 'Some New Yard')!
+    expect(unknown.distanceKm).toBeGreaterThan(20)
+  })
+
+  it('use the real distance when the farmer has a GPS location', () => {
+    const v = analyse([rec('Some New Yard')], { lat: 20.5, lon: 74.3 })!
+    expect(v.markets[0]!.distanceKm).toBeGreaterThan(80) // to the district centre
+  })
+})
