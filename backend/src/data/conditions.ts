@@ -583,6 +583,98 @@ export const CONDITIONS: Condition[] = [
     prevention: ['Keep the orchard clean of fallen fruit.'],
   },
   healthy('pomegranate', 'Pomegranate'),
+
+  // ---- Banana (Jalgaon) ----------------------------------------------------------------
+  {
+    id: 'banana.sigatoka',
+    crop: 'banana',
+    kind: 'disease',
+    name: 'Sigatoka leaf spot',
+    scientificName: 'Mycosphaerella musicola / M. fijiensis',
+    looksLike:
+      'many thin yellow, brown or black streaks running along the leaf veins, joining into long brown-black patches ' +
+      'with grey centres and yellow edges; older lower leaves dry from the edges and turn brown',
+    symptoms: [
+      'Thin yellow or brown streaks along the leaf veins, on older leaves first.',
+      'Streaks grow into long brown-black spots with grey centres and a yellow edge.',
+      'Spots join up, the leaf dries from the edge, and bunches stay small and ripen early.',
+    ],
+    organic: [
+      'Cut off and burn badly spotted leaves, and the spotted parts of other leaves.',
+      'Keep the field free of weeds and extra suckers so air moves between plants.',
+    ],
+    chemical: ['Propiconazole', 'Mancozeb', 'Carbendazim', 'Trifloxystrobin + Tebuconazole'],
+    prevention: [
+      'Plant at the right spacing and drain standing water.',
+      'Water by drip at the root, not by sprinkler on the leaves.',
+      'Check the lower leaves every week in the monsoon and after humid spells.',
+    ],
+  },
+  {
+    id: 'banana.cordana',
+    crop: 'banana',
+    kind: 'disease',
+    name: 'Cordana leaf spot',
+    scientificName: 'Neocordana musae',
+    looksLike:
+      'a few large oval or spindle-shaped pale brown dead patches with a bright yellow border, often starting from ' +
+      'the leaf edge, sometimes with faint rings inside',
+    symptoms: [
+      'Large oval pale brown patches with a bright yellow border.',
+      'Patches often start at the leaf edge and spread inward.',
+      'The dead part dries and tears; the leaf stops feeding the plant.',
+    ],
+    organic: ['Cut off and burn affected leaves.', 'Keep the field clean of dry leaves and weeds.'],
+    chemical: ['Mancozeb', 'Propiconazole', 'Copper oxychloride'],
+    prevention: ['Avoid crowding and standing water.', 'Give balanced fertilizer, especially potash.'],
+  },
+  {
+    id: 'banana.panama_wilt',
+    crop: 'banana',
+    kind: 'disease',
+    name: 'Panama wilt (Fusarium wilt)',
+    scientificName: 'Fusarium oxysporum f. sp. cubense',
+    looksLike:
+      'older leaves yellowing from the edges and then the whole leaf, leaves breaking at the stalk and hanging ' +
+      'down around the stem like a skirt, sometimes a split at the base of the stem',
+    symptoms: [
+      'Older leaves turn yellow from the edges, then fully yellow.',
+      'Leaves break at the stalk and hang down around the stem.',
+      'The stem base may split; inside, the stem shows brown or red streaks.',
+    ],
+    organic: [
+      'Dig out the sick plant with its roots and destroy it far from the field.',
+      'Add Trichoderma with well-rotted compost around healthy plants.',
+    ],
+    chemical: ['Ask your agriculture officer; no spray cures a wilted banana plant.'],
+    prevention: [
+      'Plant healthy tissue-culture plants from a trusted nursery.',
+      'Do not move soil, water or tools from a sick field to a healthy one.',
+      'Rotate with another crop where wilt has appeared.',
+    ],
+  },
+  {
+    id: 'banana.bunchy_top',
+    crop: 'banana',
+    kind: 'disease',
+    name: 'Bunchy top (virus)',
+    scientificName: 'Banana bunchy top virus',
+    looksLike:
+      'new leaves short, narrow, stiff and standing upright in a bunch at the top of the plant, with wavy yellow ' +
+      'edges and dark green dots and dashes along the veins and leaf stalk',
+    symptoms: [
+      'New leaves come out short, narrow and stiff, bunched at the top.',
+      'Leaf edges are wavy and yellow.',
+      'Dark green dots and dashes along the veins and the leaf stalk.',
+    ],
+    organic: [
+      'Dig out and destroy the sick plant and its suckers at once; there is no cure.',
+      'Watch for the small dark aphids that spread the virus.',
+    ],
+    chemical: ['Imidacloprid (against the aphids that spread the virus)'],
+    prevention: ['Plant virus-free tissue-culture plants.', 'Never take suckers from a sick plant or field.'],
+  },
+  healthy('banana', 'Banana'),
 ]
 
 /** When the photo does not match any listed problem, or is not a plant. */

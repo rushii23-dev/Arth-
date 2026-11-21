@@ -22,6 +22,14 @@ const MODEL_TIMEOUT_MS = 18_000
 const SEED = 7
 /** Not worth a retry with less time than this left. */
 const MIN_RETRY_MS = 4_000
+/** With a stand-in model ready, the first model gets this long before the stand-in is asked instead. */
+const FIRST_TRY_MS = 12_000
+
+/**
+ * When a model is overloaded (503, 429), fails or is too slow, the retry goes to a stand-in that
+ * reads the same photos and audio. Gemma 4 returns bursts of 503s under load (seen live on 21 Nov 2026).
+ */
+export const STAND_IN: Record<string, string> = { 'gemma-4-26b-a4b-it': 'gemini-2.5-flash' }
 
 /** Pulls the first JSON object out of a reply that may wrap it in prose or ``` fences. */
 export function extractJson(text: string): unknown {
@@ -65,15 +73,19 @@ export function gemini(apiKey: string, timeoutMs = MODEL_TIMEOUT_MS): Llm {
     // One retry, for a server hiccup (Gemma returns occasional 500s) or a reply of the wrong shape,
     // inside one overall deadline so the farmer never waits past the app's 20 s.
     const deadline = performance.now() + timeoutMs
+    const standIn = STAND_IN[model]
+    let current = model
     let lastError = 'invalid reply'
     for (let attempt = 0; attempt < 2; attempt++) {
       let text: string
       const start = performance.now()
       const left = deadline - start
       if (attempt > 0 && left < MIN_RETRY_MS) break
+      // leave the stand-in enough time if the first model hangs
+      const budget = attempt === 0 && standIn ? Math.min(left, FIRST_TRY_MS) : left
       try {
         const res = await ai.models.generateContent({
-          model,
+          model: current,
           contents,
           config: {
             systemInstruction: system,
@@ -83,8 +95,8 @@ export function gemini(apiKey: string, timeoutMs = MODEL_TIMEOUT_MS): Llm {
             seed: SEED,
             responseMimeType: 'application/json',
             maxOutputTokens: 1500,
-            thinkingConfig: thinkingFor(model),
-            abortSignal: AbortSignal.timeout(Math.max(1, Math.round(left))),
+            thinkingConfig: thinkingFor(current),
+            abortSignal: AbortSignal.timeout(Math.max(1, Math.round(budget))),
           },
         })
         text = res.text ?? ''
@@ -94,7 +106,7 @@ export function gemini(apiKey: string, timeoutMs = MODEL_TIMEOUT_MS): Llm {
           JSON.stringify({
             severity: 'INFO',
             msg: 'model call',
-            model,
+            model: current,
             attempt,
             ms: Math.round(performance.now() - start),
             tokensIn: u?.promptTokenCount,
@@ -107,7 +119,13 @@ export function gemini(apiKey: string, timeoutMs = MODEL_TIMEOUT_MS): Llm {
         const timedOut = err instanceof Error && (err.name === 'AbortError' || err.name === 'TimeoutError')
         // status and error kind only: an error message could quote the request
         const kind = err instanceof Error ? err.name : typeof err
-        console.log(JSON.stringify({ severity: 'WARNING', msg: 'model call failed', model, attempt, status, timedOut, kind }))
+        console.log(JSON.stringify({ severity: 'WARNING', msg: 'model call failed', model: current, attempt, status, timedOut, kind }))
+        // busy, failing or slow: hand the second try to the stand-in, if there is one and time for it
+        if (attempt === 0 && standIn && (status === 429 || timedOut || status === undefined || status >= 500)) {
+          lastError = `server error ${status ?? (timedOut ? 'timeout' : 'network')}`
+          current = standIn
+          continue
+        }
         if (status === 429) throw new ApiError(503, 'ai_busy', 'The AI is busy, try again in a minute')
         if (timedOut) throw new ApiError(504, 'ai_timeout', 'The AI took too long')
         // a 4xx is our request's fault and will fail again; a 5xx or a dropped connection may not

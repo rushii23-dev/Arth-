@@ -29,9 +29,10 @@ describe('crop catalog', () => {
     for (const [id, c] of Object.entries(CROPS)) expect(retired, id).not.toContain(c.agmarknet)
   })
 
-  it('has checked crop doctor advice for every core crop and only for core crops', () => {
+  it('has checked crop doctor advice for every core crop, and only for crops in the catalog', () => {
     const covered = new Set(CONDITIONS.map((c) => c.crop))
-    expect([...covered].sort()).toEqual(Object.keys(CROPS).filter(isCoreCrop).sort())
+    for (const crop of Object.keys(CROPS).filter(isCoreCrop)) expect(covered.has(crop), crop).toBe(true)
+    for (const crop of covered) expect(isCrop(crop), crop).toBe(true)
   })
 
   it('matches the frontend catalog and its translations', () => {

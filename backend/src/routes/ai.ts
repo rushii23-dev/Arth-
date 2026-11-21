@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { AuthVars } from '../auth.js'
-import { isCoreCrop } from '../data/crops.js'
+import { conditionsFor } from '../data/conditions.js'
 import { ApiError, badRequest } from '../errors.js'
 import { Lang } from '../schemas.js'
 import { explainDocument, labelReader, voice, type AiModels, type Media } from '../services/ai.js'
@@ -77,9 +77,9 @@ export function aiRoutes(deps: { llm: Llm; models: AiModels; limit?: (uid: strin
     const form = await readForm(c)
     const image = await media(form, 'image', IMAGE_TYPES, MAX_IMAGE_BYTES)
     const lang = field(Lang.default('en'), form, 'lang')
-    // any crop the farmer grows is accepted; only core crops have a checked list to narrow the photo to
+    // any crop the farmer grows is accepted; a crop with its own checked list narrows the photo to that list
     const named = field(z.string().trim().max(40).optional(), form, 'crop')
-    const crop = isCoreCrop(named) ? named : undefined
+    const crop = named && conditionsFor(named).length ? named : undefined
     return c.json(await cropDoctor(deps.llm, deps.models.vision, image, lang, crop, doctorCache))
   })
 

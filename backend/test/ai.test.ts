@@ -97,6 +97,23 @@ describe('POST /ai/crop-doctor', () => {
     expect(JSON.stringify(calls[0]!.parts.filter((p) => 'text' in p))).toBe('[{"text":"The farmer says this is Onion."}]')
   })
 
+  it('banana, a Jalgaon crop outside the core ten, gets its own checked list', async () => {
+    const { app, calls } = appWith({ ...reply, conditionId: 'banana.sigatoka' })
+    const b = await (await post(app, '/ai/crop-doctor', { image: jpeg(), lang: 'en', crop: 'banana' })).json()
+    expect(b.diagnosis).toBe('Sigatoka leaf spot')
+    expect(b.escalate).toBe(false)
+    expect(calls[0]!.system).toContain('banana.cordana')
+    expect(calls[0]!.system).not.toContain('onion.')
+  })
+
+  it('a crop with no checked list of its own is compared with every listed problem', async () => {
+    const { app, calls } = appWith({ ...reply, conditionId: 'unknown' })
+    const b = await (await post(app, '/ai/crop-doctor', { image: jpeg(), lang: 'en', crop: 'jowar' })).json()
+    expect(b.escalate).toBe(true)
+    expect(calls[0]!.system).toContain('onion.purple_blotch')
+    expect(calls[0]!.system).toContain('banana.sigatoka')
+  })
+
   it('gives the same answer for the same photo without asking the model again', async () => {
     const { app, calls } = appWith(reply)
     const a = await (await post(app, '/ai/crop-doctor', { image: jpeg(), lang: 'en', crop: 'onion' })).json()
